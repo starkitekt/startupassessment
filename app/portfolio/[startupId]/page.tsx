@@ -1,37 +1,65 @@
 "use client"
 
-import { cn } from "@/lib/utils"
-
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
 import {
   ArrowLeft,
-  Edit,
+  Building,
+  DollarSign,
   Users,
-  CheckCircle,
-  LinkIcon,
-  Mail,
-  Phone,
-  MapPin,
-  UploadCloud,
-  Paperclip,
-  Trash2,
-  PlusCircle,
-  Download,
+  TrendingUp,
+  CalendarDays,
+  Edit,
+  FileText,
+  Briefcase,
 } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/use-toast"
+import { useGlobalSettings } from "@/contexts/global-settings-context"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
-// Re-use mockPortfolios or fetch specific startup data
+// Mock data for a single startup - in a real app, this would be fetched
+const mockStartupDetails = {
+  id: "STP001",
+  name: "Innovatech Solutions",
+  logoUrl: "/placeholder.svg?height=128&width=128&text=IS",
+  sector: "FinTech",
+  stage: "Seed",
+  tagline: "Revolutionizing digital payments with AI.",
+  description:
+    "Innovatech Solutions is an AI-driven FinTech company focused on providing personalized financial advice and cutting-edge payment solutions. Our platform leverages machine learning to offer users unparalleled insights and seamless transaction experiences. We are committed to democratizing financial tools for the next generation.",
+  website: "https://innovatech.example.com",
+  foundedDate: "2022-08-01",
+  teamSize: 15,
+  location: "Bangalore, India",
+  totalFunding: 500000, // Base currency (e.g. USD or INR)
+  mrr: 15000, // Base currency
+  userGrowth: 25, // %
+  assignedMentor: "Ananya Sharma",
+  mentorId: "M001",
+  tags: ["AI", "Payments", "FinTech", "Machine Learning"],
+  healthScore: 85,
+  keyMetrics: [
+    { name: "Active Users", value: "10,500", trend: "+15%" },
+    { name: "Conversion Rate", value: "3.5%", trend: "+0.5%" },
+    { name: "Customer Churn", value: "2.1%", trend: "-0.2%" },
+  ],
+  recentActivities: [
+    { date: "2024-05-20", activity: "Reached 10k active users milestone." },
+    { date: "2024-05-15", activity: "Seed funding round closed." },
+    { date: "2024-04-28", activity: "Launched new mobile app version." },
+  ],
+  fundingRounds: [
+    { stage: "Pre-Seed", amount: 100000, date: "2022-10-01", investors: "Angel Investor Group" },
+    { stage: "Seed", amount: 500000, date: "2024-05-15", investors: "VC Firm Alpha, Beta Ventures" },
+  ],
+}
+
 const mockPortfolios = [
   {
     id: "STP001",
@@ -135,6 +163,151 @@ const mockPortfolios = [
       { item: "Data Privacy Policy", status: "Completed" },
     ],
   },
+  {
+    id: "STP003",
+    name: "EduSphere Learning",
+    logoUrl: "/placeholder.svg?height=80&width=80",
+    sector: "EdTech",
+    stage: "Pre-Seed",
+    fundingStatus: "Bootstrapped",
+    totalFunding: 50000,
+    mrr: 2000,
+    userGrowth: 35,
+    assignedMentor: "Priya Desai",
+    lastActivity: "2024-05-10",
+    tags: ["K-12", "Gamification", "LMS"],
+    healthScore: 92,
+    tagline: "Interactive learning platforms for K-12.",
+    description:
+      "EduSphere Learning is creating engaging and interactive educational content for students from K-12, leveraging gamification and adaptive learning technologies.",
+    website: "edusphere.com",
+    email: "contact@edusphere.com",
+    phone: "+91 98765 11223",
+    address: "789 Knowledge Park, Pune, India",
+    team: [
+      { name: "Alok Nath", role: "CEO & Founder" },
+      { name: "Meena Kumari", role: "Head of Content" },
+    ],
+    financials: {
+      revenue: [
+        { month: "Jan", value: 1000 },
+        { month: "Feb", value: 1500 },
+        { month: "Mar", value: 2000 },
+      ],
+      burnRate: [
+        { month: "Jan", value: 3000 },
+        { month: "Feb", value: 3200 },
+        { month: "Mar", value: 3500 },
+      ],
+    },
+    assessments: [{ id: "ASS004", type: "Initial Idea Validation", status: "Approved", date: "2024-04-01" }],
+    mentorship: [
+      { mentor: "Priya Desai", date: "2024-05-02", notes: "Discussed content strategy and teacher outreach." },
+    ],
+    documents: [{ id: "DOC004", name: "EduSphere_Pitch_v1.pdf", type: "pdf", size: "1.8MB", uploaded: "2024-03-20" }],
+    compliance: [
+      { item: "Company Registration", status: "Completed" },
+      { item: "Content Copyrights", status: "Pending Review" },
+    ],
+  },
+  {
+    id: "STP004",
+    name: "AgriTech Innovations",
+    logoUrl: "/placeholder.svg?height=80&width=80",
+    sector: "AgriTech",
+    stage: "Seed",
+    fundingStatus: "Seeking",
+    totalFunding: 200000,
+    mrr: 8000,
+    userGrowth: 15,
+    assignedMentor: "Rajesh Khanna",
+    lastActivity: "2024-05-25",
+    tags: ["Precision Farming", "IoT", "Sustainability"],
+    healthScore: 78,
+    tagline: "Sustainable farming solutions powered by IoT.",
+    description:
+      "AgriTech Innovations provides IoT-based solutions for precision farming, helping farmers optimize resource usage and improve crop yields sustainably.",
+    website: "agritechinnovations.com",
+    email: "info@agritechinnovations.com",
+    phone: "+91 99887 76655",
+    address: "101 Agri Park, Nashik, India",
+    team: [
+      { name: "Pooja Sharma", role: "CEO & Founder" },
+      { name: "Vikram Patel", role: "CTO" },
+    ],
+    financials: {
+      revenue: [
+        { month: "Jan", value: 6000 },
+        { month: "Feb", value: 7000 },
+        { month: "Mar", value: 8000 },
+      ],
+      burnRate: [
+        { month: "Jan", value: 4000 },
+        { month: "Feb", value: 4200 },
+        { month: "Mar", value: 4500 },
+      ],
+    },
+    assessments: [{ id: "ASS005", type: "Market Analysis", status: "Approved", date: "2024-04-15" }],
+    mentorship: [{ mentor: "Rajesh Khanna", date: "2024-05-15", notes: "Discussed market entry strategies." }],
+    documents: [
+      { id: "DOC005", name: "AgriTech_Business_Plan.pdf", type: "pdf", size: "2.1MB", uploaded: "2024-04-01" },
+    ],
+    compliance: [
+      { item: "Land Usage Permits", status: "Pending" },
+      { item: "Environmental Compliance", status: "In Progress" },
+    ],
+  },
+  {
+    id: "STP005",
+    name: "FinSecure Technologies",
+    logoUrl: "/placeholder.svg?height=80&width=80",
+    sector: "FinTech",
+    stage: "Series B",
+    fundingStatus: "Funded",
+    totalFunding: 5000000,
+    mrr: 150000,
+    userGrowth: 10,
+    assignedMentor: "Deepika Reddy",
+    lastActivity: "2024-05-28",
+    tags: ["Cybersecurity", "Blockchain", "Finance"],
+    healthScore: 88,
+    tagline: "Securing financial transactions with blockchain.",
+    description:
+      "FinSecure Technologies develops blockchain-based cybersecurity solutions for financial institutions, ensuring secure and transparent transactions.",
+    website: "finsecuretech.com",
+    email: "contact@finsecuretech.com",
+    phone: "+91 97654 32109",
+    address: "222 Cyber City, Mumbai, India",
+    team: [
+      { name: "Suresh Menon", role: "CEO" },
+      { name: "Anita Nair", role: "Head of Engineering" },
+    ],
+    financials: {
+      revenue: [
+        { month: "Jan", value: 130000 },
+        { month: "Feb", value: 140000 },
+        { month: "Mar", value: 150000 },
+      ],
+      burnRate: [
+        { month: "Jan", value: 70000 },
+        { month: "Feb", value: 75000 },
+        { month: "Mar", value: 80000 },
+      ],
+    },
+    assessments: [{ id: "ASS006", type: "Security Audit", status: "Approved", date: "2024-05-01" }],
+    mentorship: [
+      {
+        mentor: "Deepika Reddy",
+        date: "2024-05-20",
+        notes: "Discussed scaling strategies and international expansion.",
+      },
+    ],
+    documents: [{ id: "DOC006", name: "FinSecure_Whitepaper.pdf", type: "pdf", size: "3.5MB", uploaded: "2024-04-15" }],
+    compliance: [
+      { item: "Data Security Standards", status: "Completed" },
+      { item: "Regulatory Compliance", status: "Completed" },
+    ],
+  },
 ]
 
 const chartConfig = {
@@ -143,399 +316,265 @@ const chartConfig = {
 }
 
 export default function StartupDetailPage() {
-  const [startup, setStartup] = useState<any>(null) // Replace 'any' with a proper type
-  const [isLoading, setIsLoading] = useState(true)
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
+  const { formatCurrency, selectedCurrency, selectedCountry } = useGlobalSettings()
+  const startupId = params.startupId as string
 
+  const [startup, setStartup] = useState(mockStartupDetails) // In real app, fetch by ID
+
+  // Simulate fetching data
   useEffect(() => {
-    const startupId = params.startupId as string
     if (startupId) {
-      const foundStartup = mockPortfolios.find((s) => s.id === startupId)
-      if (foundStartup) {
-        setStartup(foundStartup)
-      } else {
-        // Handle startup not found, e.g., redirect or show error
-        toast({ title: "Error", description: "Startup not found.", variant: "destructive" })
-        router.push("/portfolio")
-      }
-      setIsLoading(false)
+      // Replace with actual fetch logic
+      // For now, just update the ID in the mock data if it's different
+      const fetchedStartup = { ...mockStartupDetails, id: startupId, name: `Startup ${startupId.slice(-3)}` }
+      // A more robust mock would be to have an array of startups and find by ID
+      setStartup(fetchedStartup)
     }
-  }, [params.startupId, router, toast])
+  }, [startupId])
 
-  if (isLoading || !startup) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-48" />
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="md:col-span-1 space-y-6">
-            <Skeleton className="h-40 w-full" /> <Skeleton className="h-60 w-full" />
-          </div>
-          <div className="md:col-span-2">
-            <Skeleton className="h-[500px] w-full" />
-          </div>
-        </div>
-      </div>
-    )
+  if (!startup) {
+    return <div className="p-6 text-center">Loading startup details...</div>
+  }
+
+  const handleEditStartup = () => {
+    router.push(`/portfolio/${startup.id}/edit`)
+  }
+
+  const handleViewAssessments = () => {
+    router.push(`/assessments?startupId=${startup.id}&startupName=${startup.name}`)
+  }
+
+  const handleViewMentor = () => {
+    if (startup.mentorId) {
+      router.push(`/mentors/${startup.mentorId}`)
+    } else {
+      toast({ title: "No mentor assigned or ID missing.", variant: "destructive" })
+    }
   }
 
   return (
-    <>
-      <Button variant="outline" onClick={() => router.back()} className="mb-6">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Portfolio
-      </Button>
+    <TooltipProvider>
+      <div className="space-y-6 p-4 md:p-6">
+        <Button variant="outline" onClick={() => router.back()} className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Portfolio
+        </Button>
 
-      {/* Startup Header */}
-      <Card className="mb-6">
-        <CardHeader className="flex flex-col md:flex-row items-start md:items-center gap-4">
-          <Avatar className="h-20 w-20 border-2 border-primary">
-            <AvatarImage src={startup.logoUrl || "/placeholder.svg"} alt={startup.name} />
-            <AvatarFallback>{startup.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle className="text-3xl">{startup.name}</CardTitle>
-              <Button size="sm" onClick={() => toast({ title: `Editing ${startup.name}` })}>
-                <Edit className="mr-2 h-4 w-4" /> Edit Startup
-              </Button>
-            </div>
-            <CardDescription className="mt-1">{startup.tagline}</CardDescription>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Badge variant="secondary">{startup.sector}</Badge>
-              <Badge variant="outline">{startup.stage}</Badge>
-              <Badge
-                className={cn(
-                  startup.fundingStatus === "Funded" && "status-funded",
-                  startup.fundingStatus === "Seeking" && "status-pending",
-                )}
-              >
-                {startup.fundingStatus}
-              </Badge>
-              {startup.tags.map((tag: string) => (
-                <Badge key={tag} variant="outline">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <strong className="block text-muted-foreground">Total Funding</strong>{" "}
-            <span className="text-numerical">${startup.totalFunding.toLocaleString()}</span>
-          </div>
-          <div>
-            <strong className="block text-muted-foreground">MRR</strong>{" "}
-            <span className="text-numerical">${startup.mrr.toLocaleString()}</span>
-          </div>
-          <div>
-            <strong className="block text-muted-foreground">User Growth</strong>{" "}
-            <span className="text-numerical">{startup.userGrowth}%</span>
-          </div>
-          <div>
-            <strong className="block text-muted-foreground">Health Score</strong>{" "}
-            <Progress
-              value={startup.healthScore}
-              className="h-2 mt-1"
-              indicatorClassName={
-                startup.healthScore > 80
-                  ? "bg-charting-positive"
-                  : startup.healthScore > 60
-                    ? "bg-charting-accent1"
-                    : "bg-charting-negative"
-              }
-            />{" "}
-            <span className="text-xs">{startup.healthScore}%</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Tabs defaultValue="details" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="financials">Financials</TabsTrigger>
-          <TabsTrigger value="assessments">Assessments</TabsTrigger>
-          <TabsTrigger value="mentorship">Mentorship</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="details" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Core Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h4 className="font-semibold">Description</h4>
-                <p className="text-muted-foreground text-sm">{startup.description}</p>
-              </div>
-              <div className="grid md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader className="flex flex-col md:flex-row items-start gap-6">
+            <Avatar className="h-32 w-32 border-4 border-primary">
+              <AvatarImage src={startup.logoUrl || "/placeholder.svg"} alt={startup.name} />
+              <AvatarFallback className="text-4xl">
+                {startup.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <div className="flex justify-between items-start">
                 <div>
-                  <h4 className="font-semibold">Website</h4>
-                  <a
-                    href={`https://${startup.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline flex items-center"
-                  >
-                    <LinkIcon className="mr-1 h-3 w-3" />
-                    {startup.website}
-                  </a>
+                  <CardTitle className="text-3xl">{startup.name}</CardTitle>
+                  <CardDescription className="text-lg text-muted-foreground">{startup.tagline}</CardDescription>
                 </div>
-                <div>
-                  <h4 className="font-semibold">Contact Email</h4>
-                  <a
-                    href={`mailto:${startup.email}`}
-                    className="text-sm text-primary hover:underline flex items-center"
-                  >
-                    <Mail className="mr-1 h-3 w-3" />
-                    {startup.email}
-                  </a>
-                </div>
-                <div>
-                  <h4 className="font-semibold">Phone</h4>
-                  <p className="text-sm text-muted-foreground flex items-center">
-                    <Phone className="mr-1 h-3 w-3" />
-                    {startup.phone}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold">Address</h4>
-                  <p className="text-sm text-muted-foreground flex items-center">
-                    <MapPin className="mr-1 h-3 w-3" />
-                    {startup.address}
-                  </p>
-                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" onClick={handleEditStartup}>
+                      <Edit className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Edit Startup Details</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
-              <div>
-                <h4 className="font-semibold mb-2">Team</h4>
-                <div className="space-y-2">
-                  {startup.team.map((member: any) => (
-                    <div key={member.name} className="flex items-center gap-2 p-2 border rounded-md">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback>{member.name.substring(0, 1)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium">{member.name}</p>
-                        <p className="text-xs text-muted-foreground">{member.role}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="financials" className="mt-6 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Financial Overview</CardTitle>
-            </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold mb-2 text-center">Monthly Revenue (USD)</h4>
-                <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                  <ResponsiveContainer>
-                    <LineChart data={startup.financials.revenue} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
-                      <YAxis
-                        tickFormatter={(val) => `$${val / 1000}k`}
-                        tickLine={false}
-                        axisLine={false}
-                        fontSize={12}
-                      />
-                      <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        stroke="var(--color-charting-positive)"
-                        strokeWidth={2}
-                        name="Revenue"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2 text-center">Monthly Burn Rate (USD)</h4>
-                <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                  <ResponsiveContainer>
-                    <LineChart data={startup.financials.burnRate} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
-                      <YAxis
-                        tickFormatter={(val) => `$${val / 1000}k`}
-                        tickLine={false}
-                        axisLine={false}
-                        fontSize={12}
-                      />
-                      <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        stroke="var(--color-charting-negative)"
-                        strokeWidth={2}
-                        name="Burn Rate"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </div>
-            </CardContent>
-          </Card>
-          {/* Add Funding Rounds Table here */}
-        </TabsContent>
-
-        <TabsContent value="assessments" className="mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Assessment History</CardTitle>
-              <Button size="sm" onClick={() => toast({ title: "New Assessment for " + startup.name })}>
-                {" "}
-                <PlusCircle className="mr-2 h-4 w-4" /> New Assessment
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {startup.assessments.map((ass: any) => (
-                    <TableRow key={ass.id}>
-                      <TableCell>{ass.type}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={ass.status === "Approved" ? "default" : "outline"}
-                          className={ass.status === "Approved" ? "status-approved" : "status-pending"}
-                        >
-                          {ass.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(ass.date).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <Button variant="link" size="sm" onClick={() => router.push(`/assessments/${ass.id}`)}>
-                          View
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {startup.assessments.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center h-24">
-                        No assessments found.
-                      </TableCell>
-                    </TableRow>
+              <div className="mt-2 flex items-center gap-2 text-sm">
+                <Badge
+                  variant="default"
+                  className={cn(
+                    startup.healthScore > 80 && "bg-charting-positive text-white",
+                    startup.healthScore <= 60 && "bg-charting-negative text-white",
                   )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="mentorship" className="mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Mentorship Log</CardTitle>
-              <Button size="sm" onClick={() => toast({ title: "Assign Mentor to " + startup.name })}>
-                {" "}
-                <Users className="mr-2 h-4 w-4" /> Assign Mentor
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {startup.mentorship.length > 0 ? (
-                startup.mentorship.map((ment: any, index: number) => (
-                  <div key={index} className="p-3 border rounded-md mb-3">
-                    <div className="flex justify-between items-center mb-1">
-                      <p className="font-semibold">{ment.mentor}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(ment.date).toLocaleDateString()}</p>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{ment.notes}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground text-center py-8">No mentorship sessions logged.</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="documents" className="mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Document Repository</CardTitle>
-              <Button size="sm">
-                <UploadCloud className="mr-2 h-4 w-4" /> Upload Document
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {startup.documents.map((doc: any) => (
-                <div
-                  key={doc.id}
-                  className="flex items-center justify-between p-3 border rounded-md mb-2 hover:bg-muted/50"
                 >
-                  <div className="flex items-center gap-2">
-                    <Paperclip className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">{doc.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {doc.size} - Uploaded: {new Date(doc.uploaded).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="icon" onClick={() => toast({ title: `Downloading ${doc.name}` })}>
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-600"
-                      onClick={() => toast({ title: `Deleting ${doc.name}`, variant: "destructive" })}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              {startup.documents.length === 0 && (
-                <p className="text-muted-foreground text-center py-8">No documents uploaded.</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="compliance" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Compliance Checklist</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {startup.compliance.map((item: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-3 border-b last:border-b-0">
-                  <p className="text-sm">{item.item}</p>
-                  <Badge
-                    variant={item.status === "Completed" ? "default" : "outline"}
-                    className={item.status === "Completed" ? "status-approved" : "status-pending"}
-                  >
-                    {item.status === "Completed" && <CheckCircle className="mr-1 h-3 w-3" />}
-                    {item.status}
+                  Health: {startup.healthScore}%
+                </Badge>
+                <Separator orientation="vertical" className="h-4" />
+                <span>{startup.stage} Stage</span>
+                <Separator orientation="vertical" className="h-4" />
+                <span>{startup.sector}</span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1">
+                {startup.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-xs">
+                    {tag}
                   </Badge>
+                ))}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" onClick={handleViewAssessments}>
+                      <FileText className="mr-2 h-4 w-4" /> View Assessments
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>View all assessments related to {startup.name}.</p>
+                  </TooltipContent>
+                </Tooltip>
+                {startup.assignedMentor && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="outline" size="sm" onClick={handleViewMentor}>
+                        <Users className="mr-2 h-4 w-4" /> View Mentor Profile
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>View profile of assigned mentor: {startup.assignedMentor}.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="mt-6 space-y-8">
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center">
+                    <Building className="mr-2 h-5 w-5 text-primary" />
+                    Company Info
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p>
+                    <span className="font-semibold">Founded:</span> {new Date(startup.foundedDate).toLocaleDateString()}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Team Size:</span> {startup.teamSize} employees
+                  </p>
+                  <p>
+                    <span className="font-semibold">Location:</span> {startup.location} ({selectedCountry.name})
+                  </p>
+                  <p>
+                    <span className="font-semibold">Website:</span>{" "}
+                    <a
+                      href={startup.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {startup.website}
+                    </a>
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center">
+                    <DollarSign className="mr-2 h-5 w-5 text-primary" />
+                    Financials
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p>
+                    <span className="font-semibold">Total Funding:</span> {formatCurrency(startup.totalFunding)}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Monthly Recurring Revenue (MRR):</span>{" "}
+                    {formatCurrency(startup.mrr)}
+                  </p>
+                  <p>
+                    <span className="font-semibold">User Growth (MoM):</span> {startup.userGrowth}%
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center">
+                    <Users className="mr-2 h-5 w-5 text-primary" />
+                    Mentorship
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p>
+                    <span className="font-semibold">Assigned Mentor:</span> {startup.assignedMentor || "N/A"}
+                  </p>
+                  {/* Add more mentorship details if available */}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-semibold mb-2">About {startup.name}</h3>
+              <p className="text-sm text-muted-foreground bg-muted p-4 rounded-md">{startup.description}</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-xl font-semibold mb-2 flex items-center">
+                  <TrendingUp className="mr-2 h-5 w-5 text-primary" />
+                  Key Metrics
+                </h3>
+                <div className="space-y-3">
+                  {startup.keyMetrics.map((metric) => (
+                    <Card key={metric.name} className="p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">{metric.name}</span>
+                        <span
+                          className={cn(
+                            "text-xs font-semibold",
+                            metric.trend.startsWith("+") ? "text-green-600" : "text-red-600",
+                          )}
+                        >
+                          {metric.trend}
+                        </span>
+                      </div>
+                      <p className="text-lg font-bold text-numerical">{metric.value}</p>
+                    </Card>
+                  ))}
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </>
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2 flex items-center">
+                  <Briefcase className="mr-2 h-5 w-5 text-primary" />
+                  Funding Rounds
+                </h3>
+                <div className="space-y-3">
+                  {startup.fundingRounds.map((round, index) => (
+                    <Card key={index} className="p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">{round.stage} Round</span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(round.date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-lg font-bold text-numerical">{formatCurrency(round.amount)}</p>
+                      <p className="text-xs text-muted-foreground">Investors: {round.investors}</p>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-semibold mb-2 flex items-center">
+                <CalendarDays className="mr-2 h-5 w-5 text-primary" />
+                Recent Activities
+              </h3>
+              <ul className="space-y-2 list-disc list-inside text-sm text-muted-foreground">
+                {startup.recentActivities.map((activity) => (
+                  <li key={activity.date}>
+                    <span className="font-semibold">{new Date(activity.date).toLocaleDateString()}:</span>{" "}
+                    {activity.activity}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </TooltipProvider>
   )
 }

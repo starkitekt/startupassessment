@@ -9,51 +9,71 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, FilePlus } from "lucide-react"
+import { useGlobalSettings } from "@/contexts/global-settings-context"
 
 export default function NewAssessmentPage() {
   const searchParams = useSearchParams()
   const startupId = searchParams.get("startupId")
+  const startupNameParam = searchParams.get("startupName")
   const router = useRouter()
   const { toast } = useToast()
+  const { selectedCurrency, formatCurrency } = useGlobalSettings()
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    // Logic to create new assessment
-    toast({
-      title: "Assessment Created (Simulated)",
-      description: `New assessment for Startup ID: ${startupId || "N/A"} has been initiated.`,
-    })
-    router.push("/assessments")
+    const formData = new FormData(event.currentTarget)
+    const data = Object.fromEntries(formData.entries())
+    const newAssessmentId = `ASS${Date.now().toString().slice(-6)}` // Generate a mock ID
+
+    // Simulate API call & data processing
+    console.log("New Assessment Data:", { id: newAssessmentId, ...data })
+
+    // Redirect with query parameters for confirmation on the list page
+    const queryParams = new URLSearchParams({
+      newId: newAssessmentId,
+      startupName: data.startupName as string,
+      type: data.assessmentType as string,
+    }).toString()
+
+    router.push(`/assessments?${queryParams}`)
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-6">
       <Button variant="outline" onClick={() => router.back()} className="mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back
       </Button>
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>Create New Assessment</CardTitle>
+          <CardTitle className="flex items-center">
+            <FilePlus className="mr-2 h-6 w-6 text-primary" />
+            Create New Assessment
+          </CardTitle>
           <CardDescription>
             Fill in the details to start a new assessment process.
-            {startupId && ` For Startup ID: ${startupId}`}
+            {(startupId || startupNameParam) && ` For Startup: ${startupNameParam || startupId}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="startupName">Startup Name / ID</Label>
+              <Label htmlFor="startupName">
+                Startup Name / ID <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="startupName"
-                defaultValue={startupId ? `Startup ${startupId}` : ""}
+                name="startupName"
+                defaultValue={startupNameParam || (startupId ? `Startup ${startupId}` : "")}
                 placeholder="Enter Startup Name or ID"
                 required
               />
             </div>
             <div>
-              <Label htmlFor="assessmentType">Assessment Type</Label>
-              <Select required>
+              <Label htmlFor="assessmentType">
+                Assessment Type <span className="text-red-500">*</span>
+              </Label>
+              <Select name="assessmentType" required>
                 <SelectTrigger id="assessmentType">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -62,14 +82,23 @@ export default function NewAssessmentPage() {
                   <SelectItem value="series-a">Series A Proposal</SelectItem>
                   <SelectItem value="incubation">Incubation Application</SelectItem>
                   <SelectItem value="grant">Grant Application</SelectItem>
+                  <SelectItem value="accelerator">Accelerator Program</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label htmlFor="description">Brief Description / Purpose</Label>
-              <Textarea id="description" placeholder="Enter a brief description for this assessment" />
+              <Label htmlFor="fundingAmount">Funding Amount Requested ({selectedCurrency.code})</Label>
+              <Input id="fundingAmount" name="fundingAmount" type="number" placeholder="e.g., 500000" />
             </div>
-            <Button type="submit" className="w-full">
+            <div>
+              <Label htmlFor="description">Brief Description / Purpose</Label>
+              <Textarea
+                id="description"
+                name="description"
+                placeholder="Enter a brief description for this assessment"
+              />
+            </div>
+            <Button type="submit" className="w-full jpmc-gradient text-white">
               Initiate Assessment
             </Button>
           </form>

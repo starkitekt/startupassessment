@@ -28,10 +28,13 @@ import {
   Bell,
   Lightbulb,
   ChevronDown,
+  IndianRupee,
+  Globe,
 } from "lucide-react"
 import { Input } from "./ui/input" // Assuming Input is in ui folder
 import { Badge } from "./ui/badge" // Assuming Badge is in ui folder
 import { useToast } from "./ui/use-toast" // Assuming useToast is in ui folder
+import { useGlobalSettings } from "@/contexts/global-settings-context"
 
 const mainNavItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -50,6 +53,14 @@ const resourcesNavItems = [
 export function TopNavigation() {
   const pathname = usePathname()
   const { toast } = useToast()
+  const {
+    selectedCountry,
+    setSelectedCountry,
+    availableCountries,
+    selectedCurrency,
+    setSelectedCurrency,
+    availableCurrenciesForCountry,
+  } = useGlobalSettings()
 
   const handleNotificationClick = () => {
     toast({
@@ -119,6 +130,44 @@ export function TopNavigation() {
               <Input placeholder="Search..." className="pl-9" />
             </div>
           </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                <Globe className="h-4 w-4" /> {/* Or selectedCountry.flag */}
+                {selectedCountry.code}
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Select Country</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {availableCountries.map((country) => (
+                <DropdownMenuItem key={country.code} onSelect={() => setSelectedCountry(country)}>
+                  {country.flag} {country.name} ({country.code})
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                <IndianRupee className="h-4 w-4" /> {/* Or a generic icon */}
+                {selectedCurrency.code}
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Select Currency</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {availableCurrenciesForCountry.map((currency) => (
+                <DropdownMenuItem key={currency.code} onSelect={() => setSelectedCurrency(currency)}>
+                  {currency.name} ({currency.code})
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative" onClick={handleNotificationClick}>

@@ -12,6 +12,7 @@ import { Star, Search, Filter, UserPlus, Users } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/use-toast"
 import { cn } from "@/lib/utils"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 const mockMentors = [
   {
@@ -129,151 +130,193 @@ export function MentorsContent() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-jpmc-darkblue dark:text-jpmc-lightblue">Mentor Network</h1>
-          <p className="text-muted-foreground">Discover and connect with experienced industry mentors.</p>
+    <TooltipProvider>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-jpmc-darkblue dark:text-jpmc-lightblue">Mentor Network</h1>
+            <p className="text-muted-foreground">Discover and connect with experienced industry mentors.</p>
+          </div>
+          <Button onClick={handleAddNewMentor} className="w-full sm:w-auto">
+            <UserPlus className="mr-2 h-4 w-4" /> Add New Mentor
+          </Button>
         </div>
-        <Button onClick={handleAddNewMentor} className="w-full sm:w-auto">
-          <UserPlus className="mr-2 h-4 w-4" /> Add New Mentor
-        </Button>
-      </div>
 
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center text-xl">
-            <Filter className="mr-2 h-5 w-5 text-primary" /> Find Mentors
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end">
-          <div className="relative">
-            <label htmlFor="mentor-search" className="text-sm font-medium">
-              Search
-            </label>
-            <Search className="absolute left-3 top-9 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="mentor-search"
-              placeholder="Name, title, expertise, tags..."
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div>
-            <label htmlFor="filter-expertise" className="text-sm font-medium">
-              Expertise
-            </label>
-            <Select value={filters.expertise} onValueChange={(v) => handleFilterChange("expertise", v)}>
-              <SelectTrigger id="filter-expertise">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {expertiseAreas.map((area) => (
-                  <SelectItem key={area} value={area}>
-                    {area}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label htmlFor="filter-availability" className="text-sm font-medium">
-              Availability
-            </label>
-            <Select value={filters.availability} onValueChange={(v) => handleFilterChange("availability", v)}>
-              <SelectTrigger id="filter-availability">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {availabilityStatus.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {filteredMentors.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredMentors.map((mentor) => (
-            <Card key={mentor.id} className="flex flex-col hover:shadow-lg transition-shadow duration-200">
-              <CardHeader className="flex flex-row items-start gap-4 space-y-0 p-4">
-                <Avatar className="h-16 w-16 border-2 border-primary">
-                  <AvatarImage src={mentor.avatarUrl || "/placeholder.svg"} alt={mentor.name} />
-                  <AvatarFallback>
-                    {mentor.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <CardTitle className="text-lg">{mentor.name}</CardTitle>
-                  <CardDescription className="text-xs">{mentor.title}</CardDescription>
-                  <div className="mt-1 flex items-center text-xs">
-                    <Star className="mr-1 h-3.5 w-3.5 fill-yellow-400 text-yellow-400" /> {mentor.rating}/5.0
-                    <span className="mx-1.5">·</span>
-                    <Users className="mr-1 h-3.5 w-3.5 text-muted-foreground" />{" "}
-                    {mentor.startupsMentoredInternal + mentor.startupsMentoredExternal} Mentees
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow space-y-2 p-4 text-sm">
-                <div className="flex flex-wrap gap-1.5">
-                  {mentor.expertise.slice(0, 4).map((exp) => (
-                    <Badge key={exp} variant="secondary" className="text-xs">
-                      {exp}
-                    </Badge>
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center text-xl">
+              <Filter className="mr-2 h-5 w-5 text-primary" /> Find Mentors
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end">
+            <div className="relative">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <label htmlFor="mentor-search" className="text-sm font-medium cursor-pointer">
+                    Search
+                  </label>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Search by name, title, expertise, or tags</p>
+                </TooltipContent>
+              </Tooltip>
+              <Search className="absolute left-3 top-9 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="mentor-search"
+                placeholder="Name, title, expertise, tags..."
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <label htmlFor="filter-expertise" className="text-sm font-medium cursor-pointer">
+                    Expertise
+                  </label>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Filter mentors by their area of expertise</p>
+                </TooltipContent>
+              </Tooltip>
+              <Select value={filters.expertise} onValueChange={(v) => handleFilterChange("expertise", v)}>
+                <SelectTrigger id="filter-expertise">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {expertiseAreas.map((area) => (
+                    <SelectItem key={area} value={area}>
+                      {area}
+                    </SelectItem>
                   ))}
-                  {mentor.expertise.length > 4 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{mentor.expertise.length - 4} more
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground line-clamp-2">{mentor.bio.substring(0, 100)}...</p>
-                <Badge
-                  variant={
-                    mentor.availability === "Available"
-                      ? "default"
-                      : mentor.availability === "Limited"
-                        ? "outline"
-                        : "destructive"
-                  }
-                  className={cn(
-                    "text-xs",
-                    mentor.availability === "Available" ? "bg-charting-positive text-white" : "",
-                  )}
-                >
-                  {mentor.availability}
-                </Badge>
-              </CardContent>
-              <CardFooter className="p-4 border-t">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => handleViewMentorProfile(mentor.id)}
-                >
-                  View Full Profile
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card className="col-span-full">
-          <CardContent className="h-64 flex flex-col items-center justify-center text-center">
-            <Users className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold">No Mentors Found</h3>
-            <p className="text-muted-foreground">Try adjusting your search or filter criteria.</p>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <label htmlFor="filter-availability" className="text-sm font-medium cursor-pointer">
+                    Availability
+                  </label>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>See mentors based on their current availability</p>
+                </TooltipContent>
+              </Tooltip>
+              <Select value={filters.availability} onValueChange={(v) => handleFilterChange("availability", v)}>
+                <SelectTrigger id="filter-availability">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availabilityStatus.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardContent>
         </Card>
-      )}
-    </div>
+
+        {filteredMentors.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredMentors.map((mentor) => (
+              <Card key={mentor.id} className="flex flex-col hover:shadow-lg transition-shadow duration-200">
+                <CardHeader className="flex flex-row items-start gap-4 space-y-0 p-4">
+                  <Avatar className="h-16 w-16 border-2 border-primary">
+                    <AvatarImage src={mentor.avatarUrl || "/placeholder.svg"} alt={mentor.name} />
+                    <AvatarFallback>
+                      {mentor.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{mentor.name}</CardTitle>
+                    <CardDescription className="text-xs">{mentor.title}</CardDescription>
+                    <div className="mt-1 flex items-center text-xs">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center cursor-pointer">
+                            <Star className="mr-1 h-3.5 w-3.5 fill-yellow-400 text-yellow-400" /> {mentor.rating}/5.0
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>Average rating based on mentee feedback</TooltipContent>
+                      </Tooltip>
+                      <span className="mx-1.5">·</span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center cursor-pointer">
+                            <Users className="mr-1 h-3.5 w-3.5 text-muted-foreground" />
+                            {mentor.startupsMentoredInternal + mentor.startupsMentoredExternal} Mentees
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>Total startups mentored internally and externally</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-grow space-y-2 p-4 text-sm">
+                  <div className="flex flex-wrap gap-1.5">
+                    {mentor.expertise.slice(0, 4).map((exp) => (
+                      <Badge key={exp} variant="secondary" className="text-xs">
+                        {exp}
+                      </Badge>
+                    ))}
+                    {mentor.expertise.length > 4 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{mentor.expertise.length - 4} more
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{mentor.bio.substring(0, 100)}...</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant={
+                          mentor.availability === "Available"
+                            ? "default"
+                            : mentor.availability === "Limited"
+                              ? "outline"
+                              : "destructive"
+                        }
+                        className={cn(
+                          "text-xs cursor-pointer",
+                          mentor.availability === "Available" ? "bg-charting-positive text-white" : "",
+                        )}
+                      >
+                        {mentor.availability}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>Mentor's current availability for new engagements</TooltipContent>
+                  </Tooltip>
+                </CardContent>
+                <CardFooter className="p-4 border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleViewMentorProfile(mentor.id)}
+                  >
+                    View Full Profile
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="col-span-full">
+            <CardContent className="h-64 flex flex-col items-center justify-center text-center">
+              <Users className="h-16 w-16 text-muted-foreground mb-4" />
+              <h3 className="text-xl font-semibold">No Mentors Found</h3>
+              <p className="text-muted-foreground">Try adjusting your search or filter criteria.</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </TooltipProvider>
   )
 }

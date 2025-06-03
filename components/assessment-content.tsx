@@ -1,265 +1,396 @@
 "use client"
 
-import Link from "next/link"
+import { Progress } from "@/components/ui/progress"
 
-import React, { useState, useMemo } from "react"
-import { useRouter } from "next/navigation"
+import { Label } from "@/components/ui/label"
+
+import { useState, useMemo, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs" // For pipeline stages
-import { FileText, Download, Eye, Search, PlusCircle, ListChecks, Hourglass, ThumbsUp, ThumbsDown } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { PlusCircle, Filter, Search, MoreHorizontal, Eye, Edit3, Trash2, Download, AlertCircle } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/use-toast"
 import { cn } from "@/lib/utils"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
-const assessmentData = [
+const mockAssessments = [
   {
     id: "ASS001",
     startupName: "Innovatech Solutions",
-    startupId: "STP001",
-    applicant: "Rahul Sharma",
-    type: "Seed Funding Application",
+    type: "Seed Funding",
     currentStage: "Technical Review",
-    overallProgress: 75,
     submittedDate: "2024-01-15",
-    assignedReviewer: "Priya Sharma",
-    fundingRequested: "₹50L",
-    status: "under-review", // 'pending-docs', 'under-review', 'approved', 'rejected'
+    status: "under-review",
+    progress: 75,
   },
   {
     id: "ASS002",
     startupName: "HealthWell AI",
-    startupId: "STP002",
-    applicant: "Dr. Meera Patel",
-    type: "Series A Proposal",
+    type: "Series A",
     currentStage: "Final Approval",
-    overallProgress: 95,
-    submittedDate: "2024-01-14",
-    assignedReviewer: "Amit Kumar",
-    fundingRequested: "₹75L",
+    submittedDate: "2024-02-01",
     status: "approved",
+    progress: 100,
   },
   {
     id: "ASS003",
     startupName: "EduSphere Learning",
-    startupId: "STP003",
-    applicant: "Vikash Singh",
-    type: "Incubation Application",
-    currentStage: "Document Verification",
-    overallProgress: 45,
-    submittedDate: "2024-01-13",
-    assignedReviewer: "Rajesh Gupta",
-    fundingRequested: "N/A",
+    type: "Incubation",
+    currentStage: "Initial Screening",
+    submittedDate: "2024-02-20",
     status: "pending-docs",
+    progress: 25,
   },
   {
     id: "ASS004",
     startupName: "AgriGrow Innovations",
-    startupId: "STP004",
-    applicant: "Rina Begum",
     type: "Grant Application",
-    currentStage: "Screening",
-    overallProgress: 20,
-    submittedDate: "2024-02-01",
-    assignedReviewer: "Sunil Verma",
-    fundingRequested: "₹20L",
-    status: "under-review",
-  },
-  {
-    id: "ASS005",
-    startupName: "Retail Rocket",
-    startupId: "STP005", // Assume STP005 exists
-    applicant: "Arjun Das",
-    type: "Accelerator Program",
     currentStage: "Rejected",
-    overallProgress: 100, // Or progress at rejection
-    submittedDate: "2024-01-20",
-    assignedReviewer: "Priya Sharma",
-    fundingRequested: "N/A",
+    submittedDate: "2023-12-10",
     status: "rejected",
+    progress: 0,
   },
 ]
 
-const assessmentStages = [
-  { id: "all", label: "All Assessments", icon: ListChecks },
-  { id: "pending-docs", label: "Pending Docs", icon: FileText },
-  { id: "under-review", label: "Under Review", icon: Hourglass },
-  { id: "approved", label: "Approved", icon: ThumbsUp },
-  { id: "rejected", label: "Rejected", icon: ThumbsDown },
+const stages = [
+  "All",
+  "Initial Screening",
+  "Technical Review",
+  "Financial Review",
+  "Due Diligence",
+  "Final Approval",
+  "Approved",
+  "Rejected",
 ]
+const statuses = ["All", "Pending Docs", "Under Review", "Approved", "Rejected"]
+const types = ["All", "Seed Funding", "Series A", "Incubation", "Grant Application"]
 
 export function AssessmentContent() {
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
+  const [filters, setFilters] = useState({ stage: "All", status: "All", type: "All" })
   const router = useRouter()
+  const searchParamsHook = useSearchParams() // Renamed to avoid conflict
   const { toast } = useToast()
 
-  React.useEffect(() => {
+  const [newAssessmentInfo, setNewAssessmentInfo] = useState<{ id: string; startupName: string; type: string } | null>(
+    null,
+  )
+
+  useEffect(() => {
+    const newId = searchParamsHook.get("newId")
+    const newStartupName = searchParamsHook.get("startupName")
+    const newType = searchParamsHook.get("type")
+
+    if (newId && newStartupName && newType) {
+      setNewAssessmentInfo({ id: newId, startupName: newStartupName, type: newType })
+      // Optionally, clear the query params from URL to prevent re-trigger on refresh
+      // router.replace('/assessments', undefined); // Next.js 13 App Router way
+    }
+
     const timer = setTimeout(() => setIsLoading(false), 1000)
     return () => clearTimeout(timer)
-  }, [])
+  }, [searchParamsHook, router])
 
-  const filteredAssessments = useMemo(() => {
-    return assessmentData.filter(
-      (assessment) =>
-        (activeTab === "all" || assessment.status === activeTab) &&
-        (assessment.startupName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          assessment.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          assessment.type.toLowerCase().includes(searchTerm.toLowerCase())),
-    )
-  }, [activeTab, searchTerm])
-
-  const handleReviewAssessment = (assessmentId: string) => {
-    router.push(`/assessments/${assessmentId}`)
+  const handleFilterChange = (filterType: keyof typeof filters, value: string) => {
+    setFilters((prev) => ({ ...prev, [filterType]: value }))
   }
 
-  const handleNewAssessment = () => {
-    router.push("/assessments/new")
+  const filteredAssessments = useMemo(() => {
+    return mockAssessments.filter((assessment) => {
+      const searchMatch =
+        assessment.startupName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        assessment.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        assessment.id.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const stageMatch = filters.stage === "All" || assessment.currentStage === filters.stage
+      const statusMatch =
+        filters.status === "All" || assessment.status.toLowerCase().replace("-", " ") === filters.status.toLowerCase()
+      const typeMatch = filters.type === "All" || assessment.type === filters.type
+
+      return searchMatch && stageMatch && statusMatch && typeMatch
+    })
+  }, [searchTerm, filters])
+
+  const handleNewAssessment = () => router.push("/assessments/new")
+  const viewAssessmentDetails = (assessmentId: string) => router.push(`/assessments/${assessmentId}`)
+
+  const handleExportAll = () => {
+    toast({
+      title: "Export All Assessments (Simulated)",
+      description: "Assessment data is being prepared for export. This is a simulation; no file will be downloaded.",
+      duration: 5000,
+    })
   }
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-48" /> <Skeleton className="h-10 w-36" />
+          {" "}
+          <Skeleton className="h-10 w-48" /> <Skeleton className="h-10 w-36" />{" "}
         </div>
-        <Skeleton className="h-12 w-full" /> {/* For TabsList */}
-        <Skeleton className="h-[400px] w-full" /> {/* For Table */}
+        <Card>
+          {" "}
+          <CardContent className="p-4 space-y-4">
+            {" "}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {" "}
+              <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" />{" "}
+              <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" />{" "}
+            </div>{" "}
+          </CardContent>{" "}
+        </Card>
+        <Skeleton className="h-[400px] w-full" />
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-jpmc-darkblue dark:text-jpmc-lightblue">Assessments</h1>
-          <p className="text-muted-foreground">Manage and review startup applications and assessments.</p>
+    <TooltipProvider>
+      <div className="space-y-6">
+        {newAssessmentInfo && (
+          <Alert variant="default" className="bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-700">
+            <AlertCircle className="h-4 w-4 !text-green-600 dark:!text-green-400" />
+            <AlertTitle className="text-green-700 dark:text-green-300">Assessment Initiated Successfully!</AlertTitle>
+            <AlertDescription className="text-green-600 dark:text-green-400">
+              Assessment <strong>{newAssessmentInfo.id}</strong> for startup{" "}
+              <strong>{newAssessmentInfo.startupName}</strong> (Type: {newAssessmentInfo.type}) has been logged.
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-2 h-auto p-0 text-green-700 dark:text-green-300 hover:text-green-800"
+                onClick={() => setNewAssessmentInfo(null)}
+              >
+                Dismiss
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-jpmc-darkblue dark:text-jpmc-lightblue">Manage Assessments</h1>
+            <p className="text-muted-foreground">Track and manage all startup assessment processes.</p>
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button onClick={handleNewAssessment} className="w-full sm:w-auto jpmc-gradient text-white">
+              <PlusCircle className="mr-2 h-4 w-4" /> New Assessment
+            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" onClick={handleExportAll} className="w-full sm:w-auto">
+                  <Download className="mr-2 h-4 w-4" /> Export All
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Export a summary of all assessments (simulated).</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
-        <div className="flex space-x-2 w-full sm:w-auto">
-          <Button variant="outline" className="flex-1 sm:flex-none">
-            <Download className="mr-2 h-4 w-4" /> Export All
-          </Button>
-          <Button onClick={handleNewAssessment} className="jpmc-gradient text-white flex-1 sm:flex-none">
-            <PlusCircle className="mr-2 h-4 w-4" /> New Assessment
-          </Button>
-        </div>
-      </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xl">Assessment Pipeline</CardTitle>
-          <CardDescription>Track assessments through various stages.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-              {assessmentStages.map((stage) => (
-                <TabsTrigger key={stage.id} value={stage.id} className="flex-1 text-xs sm:text-sm">
-                  <stage.icon className="mr-1.5 h-4 w-4" /> {stage.label} (
-                  {stage.id === "all"
-                    ? assessmentData.length
-                    : assessmentData.filter((a) => a.status === stage.id).length}
-                  )
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            <div className="mt-4">
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center text-xl">
+              <Filter className="mr-2 h-5 w-5 text-jpmc-blue" /> Filters
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="search-assessments">Search</Label>
+                <Search className="absolute left-3 top-9 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by Startup, ID, Type..."
-                  className="pl-10 w-full sm:w-1/2 lg:w-1/3"
+                  id="search-assessments"
+                  placeholder="Startup, type, ID..."
+                  className="pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-            </div>
-            <TabsContent value={activeTab} className="mt-4">
-              {" "}
-              {/* This seems redundant, TabsContent should be outside TabsList */}
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Assessment ID</TableHead>
-                      <TableHead>Startup</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Stage</TableHead>
-                      <TableHead>Progress</TableHead>
-                      <TableHead>Reviewer</TableHead>
-                      <TableHead>Submitted</TableHead>
-                      <TableHead className="text-center">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAssessments.length > 0 ? (
-                      filteredAssessments.map((assessment) => (
-                        <TableRow key={assessment.id} className="hover:bg-muted/50">
-                          <TableCell className="font-medium">{assessment.id}</TableCell>
-                          <TableCell>
-                            <Link href={`/portfolio/${assessment.startupId}`} className="hover:underline text-primary">
-                              {assessment.startupName}
-                            </Link>
-                          </TableCell>
-                          <TableCell>{assessment.type}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                assessment.status === "approved" && "status-approved border-green-500",
-                                assessment.status === "rejected" && "status-rejected border-red-500",
-                                assessment.status === "under-review" && "status-under-review border-blue-500",
-                                assessment.status === "pending-docs" && "status-pending border-amber-500",
-                              )}
-                            >
-                              {assessment.currentStage}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Progress
-                                value={assessment.overallProgress}
-                                className="h-2 w-20"
-                                indicatorClassName={cn(
-                                  assessment.overallProgress > 70 && "bg-charting-positive",
-                                  assessment.overallProgress > 40 &&
-                                    assessment.overallProgress <= 70 &&
-                                    "bg-charting-accent1",
-                                  assessment.overallProgress <= 40 && "bg-charting-negative",
-                                )}
-                              />
-                              <span className="text-xs text-numerical">{assessment.overallProgress}%</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{assessment.assignedReviewer}</TableCell>
-                          <TableCell>{new Date(assessment.submittedDate).toLocaleDateString()}</TableCell>
-                          <TableCell className="text-center">
-                            <Button variant="outline" size="sm" onClick={() => handleReviewAssessment(assessment.id)}>
-                              <Eye className="mr-1 h-3.5 w-3.5" /> Review
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={8} className="h-24 text-center">
-                          No assessments found for this stage or search term.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+              <div>
+                {" "}
+                <Label htmlFor="filter-type">Type</Label>{" "}
+                <Select value={filters.type} onValueChange={(v) => handleFilterChange("type", v)}>
+                  {" "}
+                  <SelectTrigger id="filter-type">
+                    <SelectValue />
+                  </SelectTrigger>{" "}
+                  <SelectContent>
+                    {types.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>{" "}
+                </Select>{" "}
               </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
+              <div>
+                {" "}
+                <Label htmlFor="filter-stage">Current Stage</Label>{" "}
+                <Select value={filters.stage} onValueChange={(v) => handleFilterChange("stage", v)}>
+                  {" "}
+                  <SelectTrigger id="filter-stage">
+                    <SelectValue />
+                  </SelectTrigger>{" "}
+                  <SelectContent>
+                    {stages.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>{" "}
+                </Select>{" "}
+              </div>
+              <div>
+                {" "}
+                <Label htmlFor="filter-status">Status</Label>{" "}
+                <Select value={filters.status} onValueChange={(v) => handleFilterChange("status", v)}>
+                  {" "}
+                  <SelectTrigger id="filter-status">
+                    <SelectValue />
+                  </SelectTrigger>{" "}
+                  <SelectContent>
+                    {statuses.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>{" "}
+                </Select>{" "}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Assessment Pipeline</CardTitle>
+            <CardDescription>
+              Displaying {filteredAssessments.length} of {mockAssessments.length} assessments.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Assessment ID</TableHead>
+                  <TableHead>Startup Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Submitted</TableHead>
+                  <TableHead>Current Stage</TableHead>
+                  <TableHead className="text-center">Progress</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAssessments.length > 0 ? (
+                  filteredAssessments.map((assessment) => (
+                    <TableRow
+                      key={assessment.id}
+                      className="hover:bg-muted/50 cursor-pointer"
+                      onClick={() => viewAssessmentDetails(assessment.id)}
+                    >
+                      <TableCell className="font-medium">{assessment.id}</TableCell>
+                      <TableCell>{assessment.startupName}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{assessment.type}</Badge>
+                      </TableCell>
+                      <TableCell>{new Date(assessment.submittedDate).toLocaleDateString()}</TableCell>
+                      <TableCell>{assessment.currentStage}</TableCell>
+                      <TableCell className="text-center">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="w-20 mx-auto">
+                              <Progress value={assessment.progress} className="h-2" />
+                              <span className="text-xs">{assessment.progress}%</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{assessment.progress}% complete</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            assessment.status === "approved"
+                              ? "default"
+                              : assessment.status === "rejected"
+                                ? "destructive"
+                                : "outline"
+                          }
+                          className={cn(
+                            assessment.status === "approved" && "bg-charting-positive text-white",
+                            assessment.status === "rejected" && "bg-charting-negative text-white",
+                            assessment.status === "under-review" && "border-blue-500 text-blue-500",
+                            assessment.status === "pending-docs" && "border-amber-500 text-amber-500",
+                          )}
+                        >
+                          {assessment.status.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                viewAssessmentDetails(assessment.id)
+                              }}
+                            >
+                              {" "}
+                              <Eye className="mr-2 h-4 w-4" /> View Details{" "}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toast({ title: `Editing ${assessment.id} (Simulated)` })
+                              }}
+                            >
+                              {" "}
+                              <Edit3 className="mr-2 h-4 w-4" /> Edit{" "}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toast({ title: `Deleting ${assessment.id} (Simulated)`, variant: "destructive" })
+                              }}
+                            >
+                              {" "}
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete{" "}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-24 text-center">
+                      No assessments found matching your criteria.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </TooltipProvider>
   )
 }

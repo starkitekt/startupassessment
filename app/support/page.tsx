@@ -109,6 +109,29 @@ export default function SupportPage() {
                 <p className="text-xs text-muted-foreground">Mon-Fri, 9 AM - 6 PM IST.</p>
               </div>
             </div>
+            <div className="pt-4 mt-4 border-t">
+              <h4 className="font-semibold mb-2">Self-Help Tools & Resources</h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link href="#" className="text-primary hover:underline">
+                    Download Application Checklist (PDF)
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-primary hover:underline">
+                    View Financial Projection Template (XLSX)
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-primary hover:underline">
+                    Incubation Program Process Overview
+                  </Link>
+                </li>
+              </ul>
+              <p className="text-xs text-muted-foreground mt-2">
+                Access helpful documents and process guides directly.
+              </p>
+            </div>
             <div className="flex items-start">
               <LifeBuoy className="mr-3 h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
               <div>

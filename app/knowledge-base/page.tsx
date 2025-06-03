@@ -23,6 +23,11 @@ const faqs = [
   },
 ]
 
+const generalFaqs = faqs.slice(0, 1) // Example: first FAQ is general
+const applicationFaqs = faqs.slice(1, 2) // Example: second FAQ is about applications
+const mentorshipFaqs = faqs.slice(2, 3) // Example: third FAQ is about mentors
+const otherFaqs = faqs.slice(3) // Rest
+
 export default function KnowledgeBasePage() {
   return (
     <div className="space-y-8">
@@ -38,21 +43,70 @@ export default function KnowledgeBasePage() {
         <Input placeholder="Search articles and FAQs..." className="pl-10" />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Frequently Asked Questions (FAQs)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Accordion type="single" collapsible className="w-full">
-            {faqs.map((faq, index) => (
-              <AccordionItem value={`item-${index}`} key={index}>
-                <AccordionTrigger className="text-left hover:no-underline">{faq.q}</AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">{faq.a}</AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>General Questions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+              {generalFaqs.map((faq, index) => (
+                <AccordionItem value={`general-item-${index}`} key={`general-${index}`}>
+                  <AccordionTrigger className="text-left hover:no-underline">{faq.q}</AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">{faq.a}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Application Process</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+              {applicationFaqs.map((faq, index) => (
+                <AccordionItem value={`app-item-${index}`} key={`app-${index}`}>
+                  <AccordionTrigger className="text-left hover:no-underline">{faq.q}</AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">{faq.a}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Mentorship Program</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+              {mentorshipFaqs.map((faq, index) => (
+                <AccordionItem value={`mentor-item-${index}`} key={`mentor-${index}`}>
+                  <AccordionTrigger className="text-left hover:no-underline">{faq.q}</AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">{faq.a}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Other Questions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+              {otherFaqs.map((faq, index) => (
+                <AccordionItem value={`other-item-${index}`} key={`other-${index}`}>
+                  <AccordionTrigger className="text-left hover:no-underline">{faq.q}</AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">{faq.a}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Placeholder for Articles/Guides */}
       <Card>
