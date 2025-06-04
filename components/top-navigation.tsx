@@ -27,6 +27,7 @@ import {
   Search,
   Bell,
   ChevronDown,
+  IndianRupee,
   Globe,
   ListChecks,
   PlusCircle,
@@ -108,7 +109,14 @@ const userProfileNavItems = (onSignOut: () => void): NavItem[] => [
 export function TopNavigation(props: TopNavigationProps) {
   const pathname = usePathname()
   const { toast } = useToast()
-  const { selectedCountry, setSelectedCountry, availableCountries } = useGlobalSettings()
+  const {
+    selectedCountry,
+    setSelectedCountry,
+    availableCountries,
+    selectedCurrency,
+    setSelectedCurrency,
+    availableCurrenciesForCountry,
+  } = useGlobalSettings()
 
   const handleNotificationClick = () => {
     toast({
@@ -207,16 +215,37 @@ export function TopNavigation(props: TopNavigationProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Select Country & Currency</DropdownMenuLabel>
+          <DropdownMenuLabel>Select Country</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {availableCountries.map((country) => (
             <DropdownMenuItem key={country.code} onSelect={() => setSelectedCountry(country)}>
-              {country.flag} {country.name} ({country.defaultCurrencyCode})
+              {country.flag} {country.name} ({country.code})
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-      {/* The separate currency DropdownMenu has been removed from here */}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full md:w-auto justify-start md:justify-center text-foreground/80 hover:bg-muted hover:text-foreground"
+          >
+            <IndianRupee className="h-4 w-4 mr-2" /> {selectedCurrency.code}
+            <ChevronDown className="h-4 w-4 ml-auto md:ml-1 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Select Currency</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {availableCurrenciesForCountry.map((currency) => (
+            <DropdownMenuItem key={currency.code} onSelect={() => setSelectedCurrency(currency)}>
+              {currency.name} ({currency.code})
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 

@@ -1,13 +1,15 @@
 "use client"
 
 import { Label } from "@/components/ui/label"
-import { useState, useMemo, useEffect } from "react" // Added useEffect
+
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import {
   LineChart,
   Line,
@@ -19,20 +21,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Legend,
-  Tooltip as RechartsTooltip,
 } from "recharts"
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
-import {
-  CHART_PALETTE,
-  commonGridProps,
-  commonXAxisProps,
-  commonYAxisProps,
-  commonLegendProps,
-  commonLineStyle,
-  getCurrencyTooltipFormatter,
-  commonPieLabel,
-  commonPieProps,
-} from "@/lib/chart-utils"
 import { Download, Filter, Users, DollarSign, Activity, CheckSquare } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/use-toast"
@@ -49,15 +38,14 @@ const fundingData = [
   { month: "Jun", disbursed: 2.7, target: 3.0 },
 ]
 const performanceData = [
-  { name: "Startup A", revenue: 150000000, growth: 15, kpiScore: 85 },
+  { name: "Startup A", revenue: 150000000, growth: 15, kpiScore: 85 }, // Assuming revenue in base currency unit
   { name: "Startup B", revenue: 220000000, growth: 12, kpiScore: 78 },
   { name: "Startup C", revenue: 180000000, growth: 20, kpiScore: 92 },
 ]
-// Updated complianceStatusData with new color var names
 const complianceStatusData = [
-  { name: "Compliant", value: 70, fill: CHART_PALETTE.positive },
-  { name: "Pending", value: 20, fill: CHART_PALETTE.warning },
-  { name: "Non-compliant", value: 10, fill: CHART_PALETTE.negative },
+  { name: "Compliant", value: 70, fill: "var(--color-green)" },
+  { name: "Pending", value: 20, fill: "var(--color-amber)" },
+  { name: "Non-compliant", value: 10, fill: "var(--color-red)" },
 ]
 
 export function ReportsContent() {
@@ -65,28 +53,23 @@ export function ReportsContent() {
   const { toast } = useToast()
   const { formatCurrency, selectedCurrency } = useGlobalSettings()
 
-  // Updated chartConfig to use new CSS variables
-  const chartConfig = useMemo(
-    () => ({
-      disbursed: { label: `Disbursed (${selectedCurrency.code} Cr)`, color: CHART_PALETTE.primary },
-      target: { label: `Target (${selectedCurrency.code} Cr)`, color: CHART_PALETTE.secondary },
-      revenue: { label: `Revenue (${selectedCurrency.code})`, color: CHART_PALETTE.primary },
-      growth: { label: "Growth (%)", color: CHART_PALETTE.secondary },
-      kpiScore: { label: "KPI Score", color: CHART_PALETTE.accent1 },
-    }),
-    [selectedCurrency.code],
-  )
+  const chartConfig = {
+    disbursed: { label: `Disbursed (${selectedCurrency.code} Cr)`, color: "hsl(var(--chart-1))" },
+    target: { label: `Target (${selectedCurrency.code} Cr)`, color: "hsl(var(--chart-2))" },
+    revenue: { label: `Revenue (${selectedCurrency.code})`, color: "hsl(var(--chart-1))" },
+    growth: { label: "Growth (%)", color: "hsl(var(--chart-2))" },
+    kpiScore: { label: "KPI Score", color: "hsl(var(--chart-3))" },
+  }
 
-  useEffect(() => {
-    // Changed from useState to useEffect
+  useState(() => {
     const timer = setTimeout(() => setIsLoading(false), 1500)
     return () => clearTimeout(timer)
-  }, [])
+  })
 
   const handleExport = (reportName: string) => {
     toast({
       title: "Export Initiated (Simulated)",
-      description: `${reportName}.csv is being generated. This is a simulation.`,
+      description: `${reportName}.csv is being generated. This is a simulation; no file will be downloaded in this demo.`,
       duration: 5000,
     })
   }
@@ -95,13 +78,13 @@ export function ReportsContent() {
     return (
       <div className="space-y-6 p-4 md:p-6">
         <div className="flex items-center justify-between">
-          {" "}
-          <Skeleton className="h-10 w-48" /> <Skeleton className="h-10 w-32" />{" "}
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-32" />
         </div>
         <Skeleton className="h-12 w-full" />
         <div className="grid gap-6 md:grid-cols-2">
-          {" "}
-          <Skeleton className="h-80 w-full" /> <Skeleton className="h-80 w-full" />{" "}
+          <Skeleton className="h-80 w-full" />
+          <Skeleton className="h-80 w-full" />
         </div>
         <Skeleton className="h-64 w-full" />
       </div>
@@ -120,13 +103,13 @@ export function ReportsContent() {
             <TooltipTrigger asChild>
               <Button
                 onClick={() => handleExport("Consolidated Report")}
-                className="w-full sm:w-auto bg-jpmc-blue hover:bg-jpmc-darkblue text-white"
+                className="w-full sm:w-auto jpmc-gradient text-white"
               >
                 <Download className="mr-2 h-4 w-4" /> Export Consolidated
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Download a comprehensive report (simulated).</p>
+              <p>Download a comprehensive report of all data (simulated).</p>
             </TooltipContent>
           </Tooltip>
         </div>
@@ -224,49 +207,47 @@ export function ReportsContent() {
               </CardHeader>
               <CardContent>
                 <ChartContainer config={chartConfig} className="h-[350px] w-full">
-                  <ResponsiveContainer>
-                    <LineChart data={fundingData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                      <CartesianGrid {...commonGridProps} vertical={false} />
-                      <XAxis dataKey="month" {...commonXAxisProps} />
-                      <YAxis
-                        {...commonYAxisProps(70)}
-                        tickFormatter={(value) =>
-                          formatCurrency(value * 10000000, selectedCurrency.code, {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 1,
-                          })
-                        }
-                      />
-                      <RechartsTooltip
-                        cursor={{ strokeDasharray: "3 3" }}
-                        content={
-                          <ChartTooltipContent
-                            formatter={getCurrencyTooltipFormatter(
-                              { formatCurrency, selectedCurrency },
-                              false,
-                              10000000,
-                            )}
-                          />
-                        }
-                      />
-                      <Legend {...commonLegendProps} />
-                      <Line
-                        type="monotone"
-                        dataKey="disbursed"
-                        name={chartConfig.disbursed.label}
-                        stroke={chartConfig.disbursed.color}
-                        {...commonLineStyle}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="target"
-                        name={chartConfig.target.label}
-                        stroke={chartConfig.target.color}
-                        strokeDasharray="5 5" // Keep dasharray for target line
-                        {...commonLineStyle}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <LineChart data={fundingData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) =>
+                        formatCurrency(value * 10000000, selectedCurrency.code, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })
+                      }
+                    />
+                    <ChartTooltip
+                      content={
+                        <ChartTooltipContent
+                          formatter={(value, name) =>
+                            name === chartConfig.disbursed.label || name === chartConfig.target.label
+                              ? formatCurrency(Number(value) * 10000000, selectedCurrency.code)
+                              : value
+                          }
+                        />
+                      }
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="disbursed"
+                      name={chartConfig.disbursed.label}
+                      stroke="var(--color-disbursed)"
+                      strokeWidth={2}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="target"
+                      name={chartConfig.target.label}
+                      stroke="var(--color-target)"
+                      strokeDasharray="5 5"
+                      strokeWidth={2}
+                    />
+                  </LineChart>
                 </ChartContainer>
               </CardContent>
               <CardFooter>
@@ -277,7 +258,7 @@ export function ReportsContent() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Download funding data (simulated).</p>
+                    <p>Download detailed funding data (simulated).</p>
                   </TooltipContent>
                 </Tooltip>
               </CardFooter>
@@ -320,7 +301,7 @@ export function ReportsContent() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Download performance metrics (simulated).</p>
+                    <p>Download startup performance metrics (simulated).</p>
                   </TooltipContent>
                 </Tooltip>
               </CardFooter>
@@ -336,25 +317,22 @@ export function ReportsContent() {
               <CardContent className="flex items-center justify-center">
                 <ChartContainer config={{}} className="h-[300px] w-full max-w-xs">
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart margin={{ top: 0, right: 0, bottom: 30, left: 0 }}>
-                      <RechartsTooltip
-                        cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
-                        content={<ChartTooltipContent nameKey="name" hideLabel />}
-                      />
+                    <PieChart>
+                      <ChartTooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
                       <Pie
                         data={complianceStatusData}
                         dataKey="value"
                         nameKey="name"
-                        {...commonPieProps}
-                        label={commonPieLabel}
-                        stroke={CHART_PALETTE.background}
-                        strokeWidth={1}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label
                       >
                         {complianceStatusData.map((entry, index) => (
-                          <Cell key={`cell-compliance-${index}`} fill={entry.fill} />
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
                         ))}
                       </Pie>
-                      <Legend {...commonLegendProps} verticalAlign="bottom" />
+                      <Legend />
                     </PieChart>
                   </ResponsiveContainer>
                 </ChartContainer>
@@ -367,7 +345,7 @@ export function ReportsContent() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Download compliance data (simulated).</p>
+                    <p>Download compliance status data (simulated).</p>
                   </TooltipContent>
                 </Tooltip>
               </CardFooter>
@@ -382,11 +360,11 @@ export function ReportsContent() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Cohort analysis details would go here, comparing cohorts on metrics like average funding, success
-                  rate, time to milestone, etc.
+                  Cohort analysis details would go here, potentially comparing different cohorts on metrics like average
+                  funding, success rate, time to milestone, etc. This could involve more complex charts and tables.
                 </p>
-                <div className="h-64 flex items-center justify-center border-2 border-dashed border-chart-gray-light rounded-md mt-4">
-                  <p className="text-chart-gray-medium">Cohort-specific visualizations coming soon.</p>
+                <div className="h-64 flex items-center justify-center border-2 border-dashed rounded-md mt-4">
+                  <p className="text-slate-500">Cohort-specific visualizations coming soon.</p>
                 </div>
               </CardContent>
               <CardFooter>
@@ -397,7 +375,7 @@ export function ReportsContent() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Download cohort analysis (simulated).</p>
+                    <p>Download cohort analysis data (simulated).</p>
                   </TooltipContent>
                 </Tooltip>
               </CardFooter>

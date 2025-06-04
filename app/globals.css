@@ -4,128 +4,97 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 210 100% 35%; /* JPMC Blue - Maintained */
-    --primary-foreground: 210 20% 98%;
-    --secondary: 210 20% 96.1%;
-    --secondary-foreground: 224 71.4% 4.1%;
-    --muted: 210 20% 96.1%;
-    --muted-foreground: 215 20.2% 45.1%;
-    --accent: 210 20% 96.1%;
-    --accent-foreground: 224 71.4% 4.1%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 20.2% 85.1%; /* Lighter border for cleaner look */
-    --input: 215 20.2% 85.1%;
-    --ring: 210 100% 35%; /* JPMC Blue for focus */
-    --radius: 0.5rem;
+    /* Apple-inspired Light Theme Palette */
+    --background: 220 20% 97%; /* Off-white, very light gray */
+    --foreground: 220 10% 10%; /* Dark gray for text */
 
-    /* McKinsey-Inspired Chart & UI Colors */
-    /* Base Palette */
-    --chart-blue-deep: 210 100% 25%; /* jpmc.darkblue */
-    --chart-blue-primary: 210 100% 35%; /* jpmc.blue / primary */
-    --chart-blue-secondary: 210 90% 55%;
-    --chart-blue-tertiary: 210 80% 75%;
-    --chart-gray-dark: 215 25% 35%;
-    --chart-gray-medium: 215 20% 55%;
-    --chart-gray-light: 215 20% 88%; /* For grids, subtle elements */
-    --chart-gray-extralight: 215 20% 95%;
+    --card: 220 0% 100%; /* White cards */
+    --card-foreground: 220 10% 10%;
 
-    /* Accent Colors (use sparingly) */
-    --chart-accent-amber: 35 90% 58%;
-    --chart-accent-teal: 170 70% 40%;
-    --chart-accent-purple: 260 70% 60%;
+    --popover: 220 0% 100%;
+    --popover-foreground: 220 10% 10%;
 
-    /* Semantic Colors */
-    --chart-positive: 140 60% 40%;
-    --chart-negative: 0 75% 55%;
-    --chart-warning: 40 90% 55%;
+    --primary: 210 100% 45%; /* Brighter, Apple-like blue */
+    --primary-foreground: 210 0% 100%; /* White text on primary */
 
-    /* Chart Variables for shadcn/ui chart components */
-    /* These are typically used by `hsl(var(--chart-1))` in components */
-    --chart-1: var(--chart-blue-primary);
-    --chart-2: var(--chart-blue-secondary);
-    --chart-3: var(--chart-accent-amber);
-    --chart-4: var(--chart-accent-teal);
-    --chart-5: var(--chart-accent-purple);
+    --secondary: 220 15% 90%; /* Light gray for secondary elements */
+    --secondary-foreground: 220 10% 25%; /* Darker gray text on secondary */
 
-    /* Direct color variables used in some components, mapped to new system */
-    --color-green: hsl(var(--chart-positive));
-    --color-amber: hsl(var(--chart-warning));
-    --color-red: hsl(var(--chart-negative));
+    --muted: 220 15% 92%; /* Lighter gray for muted backgrounds */
+    --muted-foreground: 220 10% 45%; /* Softer gray for muted text */
 
-    --color-count: hsl(var(--chart-1));
-    --color-jobsCreated: hsl(var(--chart-2));
-    --color-revenueGenerated: hsl(var(--chart-1));
-    --color-applications: hsl(var(--chart-1));
-    --color-funded: hsl(var(--chart-2));
-    --color-disbursed: hsl(var(--chart-1));
-    --color-target: hsl(var(--chart-2)); /* Can be styled with dasharray too */
+    --accent: 210 100% 50%; /* Can be same as primary or a variation */
+    --accent-foreground: 210 0% 100%;
+
+    --destructive: 0 72% 51%; /* Apple's red */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 88%; /* Softer borders */
+    --input: 220 15% 94%; /* Light input background */
+    --input-foreground: 220 10% 10%; /* Text color for input */
+    --ring: 210 100% 50%; /* Focus ring, same as accent */
+
+    --radius: 0.75rem; /* Default border radius, slightly more rounded */
+
+    /* JPMC Branding (use sparingly) */
+    --jpmc-brand-blue-hsl: 210 100% 35%;
+    --jpmc-brand-darkblue-hsl: 210 100% 25%;
+
+    /* Charting Palette (can be kept or refined) */
+    --chart-primary: 210 90% 50%;
+    --chart-secondary: 190 70% 45%;
+    --chart-accent1: 30 90% 55%;
+    --chart-accent2: 260 70% 65%;
+    --chart-accent3: 50 95% 60%;
+    --chart-positive: 130 60% 45%; /* Greener green */
+    --chart-negative: 0 70% 55%;
+    --chart-neutral: 220 10% 65%;
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 210 100% 65%; /* Lighter JPMC Blue for dark mode */
-    --primary-foreground: 210 100% 15%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 50.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 26.9%; /* Darker border */
-    --input: 215 27.9% 26.9%;
-    --ring: 210 100% 65%;
+    /* Apple-inspired Dark Theme Palette */
+    --background: 220 15% 12%; /* Very dark gray, almost black */
+    --foreground: 220 10% 90%; /* Light gray text */
 
-    /* Dark Theme Chart Colors */
-    --chart-blue-deep: 210 100% 35%;
-    --chart-blue-primary: 210 100% 65%;
-    --chart-blue-secondary: 210 90% 50%;
-    --chart-blue-tertiary: 210 80% 40%;
-    --chart-gray-dark: 215 15% 70%;
-    --chart-gray-medium: 215 15% 50%;
-    --chart-gray-light: 215 15% 25%; /* For dark grids */
-    --chart-gray-extralight: 215 15% 15%;
+    --card: 220 15% 18%; /* Darker card background */
+    --card-foreground: 220 10% 90%;
 
-    --chart-accent-amber: 35 90% 68%;
-    --chart-accent-teal: 170 70% 50%;
-    --chart-accent-purple: 260 70% 70%;
+    --popover: 220 15% 18%;
+    --popover-foreground: 220 10% 90%;
 
-    --chart-positive: 140 60% 50%;
-    --chart-negative: 0 70% 60%;
-    --chart-warning: 40 90% 65%;
+    --primary: 210 100% 55%; /* Brighter blue for dark mode */
+    --primary-foreground: 220 10% 5%; /* Dark text on primary */
 
-    /* Chart Variables for shadcn/ui chart components */
-    --chart-1: var(--chart-blue-primary);
-    --chart-2: var(--chart-blue-secondary);
-    --chart-3: var(--chart-accent-amber);
-    --chart-4: var(--chart-accent-teal);
-    --chart-5: var(--chart-accent-purple);
+    --secondary: 220 15% 22%; /* Slightly lighter dark gray */
+    --secondary-foreground: 220 10% 80%;
 
-    /* Direct color variables */
-    --color-green: hsl(var(--chart-positive));
-    --color-amber: hsl(var(--chart-warning));
-    --color-red: hsl(var(--chart-negative));
+    --muted: 220 15% 20%;
+    --muted-foreground: 220 10% 55%;
 
-    --color-count: hsl(var(--chart-1));
-    --color-jobsCreated: hsl(var(--chart-2));
-    --color-revenueGenerated: hsl(var(--chart-1));
-    --color-applications: hsl(var(--chart-1));
-    --color-funded: hsl(var(--chart-2));
-    --color-disbursed: hsl(var(--chart-1));
-    --color-target: hsl(var(--chart-2));
+    --accent: 210 100% 60%;
+    --accent-foreground: 220 10% 5%;
+
+    --destructive: 0 60% 50%; /* Dark mode red */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 25%; /* Dark borders */
+    --input: 220 15% 20%; /* Dark input background */
+    --input-foreground: 220 10% 90%;
+    --ring: 210 100% 60%;
+
+    /* JPMC Branding (use sparingly) */
+    --jpmc-brand-blue-hsl: 210 100% 45%;
+    --jpmc-brand-darkblue-hsl: 210 100% 35%;
+
+    /* Dark Charting Palette */
+    --chart-primary: 210 90% 60%;
+    --chart-secondary: 190 70% 55%;
+    --chart-accent1: 35 90% 65%;
+    --chart-accent2: 260 70% 75%;
+    --chart-accent3: 50 95% 70%;
+    --chart-positive: 130 60% 55%;
+    --chart-negative: 0 65% 60%;
+    --chart-neutral: 220 10% 50%;
   }
 }
 
@@ -134,23 +103,80 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground font-geist;
+    -webkit-font-smoothing: antialiased; /* Smoother fonts on WebKit */
+    -moz-osx-font-smoothing: grayscale; /* Smoother fonts on Firefox */
   }
-  /* Custom scrollbar for a cleaner look */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold text-foreground;
   }
-  ::-webkit-scrollbar-track {
-    @apply bg-muted/50;
-    border-radius: 10px;
+  h1 {
+    @apply text-4xl tracking-tight;
+  } /* Adjusted tracking for larger headings */
+  h2 {
+    @apply text-3xl tracking-tight;
   }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-border;
-    border-radius: 10px;
+  h3 {
+    @apply text-2xl tracking-tight;
   }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/50;
+  h4 {
+    @apply text-xl;
+  }
+  p,
+  li,
+  span,
+  label,
+  div /* for general text */ {
+    @apply text-base;
+  }
+
+  /* Typography classes (keep if specific mono font is needed) */
+  .text-numerical {
+    @apply font-ibm-plex-mono;
+  }
+  .text-content {
+    /* This might be redundant if body defaults to geist */
+    @apply font-geist;
+  }
+}
+
+@layer components {
+  /* Refined gradient to use the new primary */
+  .jpmc-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--jpmc-brand-darkblue-hsl)) 100%);
+  }
+
+  /* Status chips - adjust backgrounds for new palette */
+  .status-chip {
+    @apply inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium border; /* Slightly larger padding, more rounded */
+  }
+
+  .status-pending {
+    /* Amber/Yellow */
+    @apply bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-700/30 dark:text-yellow-300 dark:border-yellow-600;
+  }
+  .status-approved,
+  .status-funded,
+  .status-active {
+    /* Green */
+    @apply bg-green-100 text-green-800 border-green-300 dark:bg-green-700/30 dark:text-green-300 dark:border-green-600;
+  }
+  .status-rejected {
+    /* Red */
+    @apply bg-red-100 text-red-800 border-red-300 dark:bg-red-700/30 dark:text-red-300 dark:border-red-600;
+  }
+  .status-under-review {
+    /* Blue */
+    @apply bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-700/30 dark:text-blue-300 dark:border-blue-600;
+  }
+  .status-inactive {
+    /* Gray */
+    @apply bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700/30 dark:text-slate-300 dark:border-slate-600;
   }
 }

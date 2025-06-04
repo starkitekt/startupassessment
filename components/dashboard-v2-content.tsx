@@ -1,38 +1,14 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect } from "react" // Added useEffect
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  Legend,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip as RechartsTooltip,
-} from "recharts"
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart" // ChartTooltip is part of RechartsTooltip
-import {
-  CHART_PALETTE,
-  commonGridProps,
-  commonXAxisProps,
-  commonYAxisProps,
-  commonLegendProps,
-  commonBarStyle,
-  getCurrencyTooltipFormatter,
-  commonPieLabel,
-  commonPieProps,
-  DYNAMIC_CHART_COLORS,
-} from "@/lib/chart-utils"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend, PieChart, Pie, Cell } from "recharts"
 import { Progress } from "@/components/ui/progress"
 import {
   TrendingUp,
@@ -53,14 +29,16 @@ import {
   Target,
   Goal,
 } from "lucide-react"
+// Removed useToast as it's not directly used here, errors are handled in GlobalSettingsContext
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useGlobalSettings } from "@/contexts/global-settings-context"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 // --- Mock Data Definitions ---
+// Assuming MRR and funding values are in BASE_CURRENCY (INR)
 const mockPortfoliosSnapshot = [
-  { id: "STP001", name: "Innovatech Solutions", sector: "FinTech", stage: "Seed", healthScore: 85, mrr: 1500000 },
+  { id: "STP001", name: "Innovatech Solutions", sector: "FinTech", stage: "Seed", healthScore: 85, mrr: 1500000 }, // e.g. 15 Lakh INR
   { id: "STP002", name: "HealthWell AI", sector: "HealthTech", stage: "Series A", healthScore: 78, mrr: 4500000 },
   { id: "STP003", name: "EduSphere Learning", sector: "EdTech", stage: "Pre-Seed", healthScore: 92, mrr: 200000 },
   { id: "STP004", name: "AgriGrow Innovations", sector: "AgriTech", stage: "Seed", healthScore: 80, mrr: 800000 },
@@ -71,40 +49,41 @@ const mockPortfoliosSnapshot = [
 const keyMetricsData = [
   {
     title: "Total Startups",
-    value: "1,247",
+    value: "1,247", // Static value
     trend: "+12.5%",
     icon: Building2,
     trendColor: "text-charting-positive",
-    tooltip: "Total startups in program.",
+    tooltip: "Total number of startups currently in the incubator program or portfolio.",
   },
   {
     title: "Active Applications",
-    value: "89",
+    value: "89", // Static value
     trend: "+8.2%",
     icon: FileText,
     trendColor: "text-charting-positive",
-    tooltip: "Applications under review.",
+    tooltip: "Number of startup applications currently under review or processing.",
   },
   {
     title: "Funding Disbursed",
-    valueAsNumber: 248000000,
+    valueAsNumber: 248000000, // Base value in INR (24.8 Cr)
     trend: "+15.3%",
     icon: DollarSign,
     trendColor: "text-charting-positive",
-    tooltip: "Total funding disbursed.",
+    tooltip: "Total funding disbursed to startups in the current fiscal period.",
   },
   {
     title: "Mentors Active",
-    value: "42",
+    value: "42", // Static value
     trend: "+5",
     icon: Users,
     trendColor: "text-charting-positive",
-    tooltip: "Active mentors.",
+    tooltip: "Number of mentors actively engaged with startups.",
   },
 ]
 
+// Assuming 'disbursed' is in Crores of INR
 const fundingActivityData = [
-  { month: "Jan", disbursed: 1.2, applications: 45 },
+  { month: "Jan", disbursed: 1.2, applications: 45 }, // 1.2 Cr INR
   { month: "Feb", disbursed: 1.8, applications: 52 },
   { month: "Mar", disbursed: 2.5, applications: 48 },
   { month: "Apr", disbursed: 2.1, applications: 61 },
@@ -113,59 +92,59 @@ const fundingActivityData = [
 ]
 
 const applicationFunnelData = [
-  // Colors will be applied via Cell fill
-  { stage: "Submitted", count: 500 },
-  { stage: "Screened", count: 350 },
-  { stage: "Assessed", count: 150 },
-  { stage: "Approved", count: 75 },
-  { stage: "Funded", count: 60 },
+  { stage: "Submitted", count: 500, color: "hsl(var(--chart-1))" },
+  { stage: "Screened", count: 350, color: "hsl(var(--chart-2))" },
+  { stage: "Assessed", count: 150, color: "hsl(var(--chart-3))" },
+  { stage: "Approved", count: 75, color: "hsl(var(--chart-4))" },
+  { stage: "Funded", count: 60, color: "hsl(var(--chart-5))" },
 ]
 
 const recentActivity = [
   {
     id: "ACT001",
     type: "New Application",
-    description: "Innovatech Solutions submitted Series A application.",
+    description: "Innovatech Solutions submitted their Series A application.",
     time: "2 hours ago",
     icon: FileText,
-    color: "text-charting-blue-primary",
+    color: "text-blue-500",
   },
   {
     id: "ACT002",
     type: "Assessment Approved",
-    description: "HealthWell AI seed funding approved.",
+    description: "HealthWell AI's seed funding assessment was approved.",
     time: "1 day ago",
     icon: CheckCircle,
-    color: "text-charting-positive",
+    color: "text-green-500",
   },
   {
     id: "ACT003",
     type: "Mentor Assigned",
-    description: "Ananya Sharma assigned to EduSphere.",
+    description: "Ananya Sharma assigned to EduSphere Learning.",
     time: "2 days ago",
     icon: Users,
-    color: "text-charting-accent-purple",
+    color: "text-purple-500",
   },
 ]
 
 const pendingTasks = [
   { id: "TSK001", title: "Review Innovatech's Pitch Deck", dueDate: "Tomorrow", priority: "High" },
-  { id: "TSK002", title: "Follow-up: HealthWell AI", dueDate: "In 3 days", priority: "Medium" },
+  { id: "TSK002", title: "Schedule Follow-up with HealthWell AI", dueDate: "In 3 days", priority: "Medium" },
 ]
 
+// Assuming currentValue and targetValue for funding are in Crores of INR
 const incubatorGoals = [
   {
     id: "goal1",
     name: "Annual Funding Disbursed",
-    currentValueInBase: 24.8 * 10000000,
-    targetValueInBase: 50 * 10000000,
-    unit: "Cr",
+    currentValueInBase: 24.8 * 10000000, // 24.8 Cr INR
+    targetValueInBase: 50 * 10000000, // 50 Cr INR
+    unit: "Cr", // Unit for display context, actual value is in base
     progress: (24.8 / 50) * 100,
   },
   {
     id: "goal2",
     name: "New Startups Onboarded (Q3)",
-    currentValueInBase: 12,
+    currentValueInBase: 12, // Assuming this is a count, not currency
     targetValueInBase: 20,
     unit: "",
     progress: (12 / 20) * 100,
@@ -173,11 +152,21 @@ const incubatorGoals = [
   {
     id: "goal3",
     name: "Successful Exits (YTD)",
-    currentValueInBase: 3,
+    currentValueInBase: 3, // Assuming this is a count
     targetValueInBase: 5,
     unit: "",
     progress: (3 / 5) * 100,
   },
+]
+
+const CHART_COLORS = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+  "hsl(var(--chart-accent1))",
+  "hsl(var(--chart-accent2))",
 ]
 
 // --- Component ---
@@ -186,6 +175,7 @@ export function DashboardV2Content() {
   const router = useRouter()
   const { formatCurrency, selectedCountry, selectedCurrency, isExchangeRateLoading } = useGlobalSettings()
 
+  // Simulate initial loading
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 1000)
     return () => clearTimeout(timer)
@@ -193,32 +183,22 @@ export function DashboardV2Content() {
 
   const chartConfig = useMemo(
     () => ({
-      disbursed: { label: `Disbursed (${selectedCurrency.code} Cr)`, color: CHART_PALETTE.primary },
-      applications: { label: "Applications", color: CHART_PALETTE.secondary },
+      disbursed: { label: `Disbursed (${selectedCurrency.code} Cr)`, color: "hsl(var(--chart-primary))" },
+      applications: { label: "Applications", color: "hsl(var(--chart-secondary))" },
     }),
     [selectedCurrency.code],
   )
 
-  const portfolioHealthDistribution = useMemo(
-    () => [
-      {
-        name: "Healthy (>=80%)",
-        value: mockPortfoliosSnapshot.filter((s) => s.healthScore >= 80).length,
-        fill: "hsl(var(--chart-positive))",
-      },
-      {
-        name: "Average (60-79%)",
-        value: mockPortfoliosSnapshot.filter((s) => s.healthScore >= 60 && s.healthScore < 80).length,
-        fill: "hsl(var(--chart-warning))",
-      },
-      {
-        name: "At Risk (<60%)",
-        value: mockPortfoliosSnapshot.filter((s) => s.healthScore < 60).length,
-        fill: "hsl(var(--chart-negative))",
-      },
-    ],
-    [],
-  )
+  const portfolioHealthDistribution = useMemo(() => {
+    const healthy = mockPortfoliosSnapshot.filter((s) => s.healthScore >= 80).length
+    const average = mockPortfoliosSnapshot.filter((s) => s.healthScore >= 60 && s.healthScore < 80).length
+    const atRisk = mockPortfoliosSnapshot.filter((s) => s.healthScore < 60).length
+    return [
+      { name: "Healthy (>=80%)", value: healthy, fill: "var(--chart-positive)" }, // Using CSS variables for colors
+      { name: "Average (60-79%)", value: average, fill: "var(--chart-accent1)" },
+      { name: "At Risk (<60%)", value: atRisk, fill: "var(--chart-negative)" },
+    ]
+  }, []) // No external dependencies, runs once
 
   const sectorDistribution = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -228,9 +208,9 @@ export function DashboardV2Content() {
     return Object.entries(counts).map(([name, value], index) => ({
       name,
       value,
-      fill: DYNAMIC_CHART_COLORS[index % DYNAMIC_CHART_COLORS.length],
+      fill: CHART_COLORS[index % CHART_COLORS.length],
     }))
-  }, [])
+  }, []) // No external dependencies, runs once
 
   const stageDistribution = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -240,15 +220,16 @@ export function DashboardV2Content() {
     return Object.entries(counts).map(([name, value], index) => ({
       name,
       value,
-      fill: DYNAMIC_CHART_COLORS[index % DYNAMIC_CHART_COLORS.length],
+      fill: CHART_COLORS[index % CHART_COLORS.length],
     }))
-  }, [])
+  }, []) // No external dependencies, runs once
 
   const handleViewAllPortfolio = () => router.push("/portfolio")
   const handleViewStartup = (startupId: string) => router.push(`/portfolio/${startupId}`)
   const handleNewAssessment = () => router.push("/assessments/new")
   const handleViewAllTasks = () => router.push("/tasks")
 
+  // Skeleton loader for initial load or when exchange rates are loading
   if (isLoading || isExchangeRateLoading) {
     return (
       <div className="space-y-6 lg:space-y-8 p-4 md:p-6">
@@ -263,9 +244,9 @@ export function DashboardV2Content() {
           <Skeleton className="lg:col-span-1 h-80 rounded-lg" />
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-72 w-full" />
-          ))}
+          <Skeleton className="h-72 w-full" />
+          <Skeleton className="h-72 w-full" />
+          <Skeleton className="h-72 w-full" />
         </div>
         <Skeleton className="h-96 rounded-lg" />
       </div>
@@ -283,24 +264,25 @@ export function DashboardV2Content() {
             </p>
             <p className="text-muted-foreground">Comprehensive overview of key metrics and performance.</p>
           </div>
-          <Button onClick={handleNewAssessment} size="lg" className="bg-jpmc-blue hover:bg-jpmc-darkblue text-white">
+          <Button onClick={handleNewAssessment} size="lg" className="jpmc-gradient text-white">
             <PlusCircle className="mr-2 h-5 w-5" /> New Assessment
           </Button>
         </div>
 
+        {/* Key Metrics */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {keyMetricsData.map((metric) => (
-            <Card key={metric.title} className="border hover:shadow-lg transition-shadow duration-200 ease-in-out">
+            <Card key={metric.title} className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <CardTitle className="text-sm font-medium cursor-help">{metric.title}</CardTitle>
+                    <CardTitle className="text-base font-medium cursor-help">{metric.title}</CardTitle>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{metric.tooltip}</p>
                   </TooltipContent>
                 </Tooltip>
-                <metric.icon className="h-4 w-4 text-muted-foreground" />
+                <metric.icon className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-numerical">
@@ -316,78 +298,88 @@ export function DashboardV2Content() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <Card className="border hover:shadow-lg transition-shadow">
+            {/* Funding & Application Activity Chart */}
+            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Activity className="mr-2 h-5 w-5 text-primary" /> Funding & Application Activity
                 </CardTitle>
                 <CardDescription className="text-sm text-muted-foreground">
-                  Monthly trends for funding and applications.
+                  Monthly trends for funding disbursed and applications received.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ChartContainer config={chartConfig} className="h-[300px] w-full">
                   <ResponsiveContainer>
-                    <BarChart
-                      data={fundingActivityData}
-                      margin={{ top: 5, right: 5, left: -15 /* Adjust for YAxis labels */, bottom: 5 }}
-                    >
-                      <CartesianGrid {...commonGridProps} vertical={false} />
-                      <XAxis dataKey="month" {...commonXAxisProps} />
+                    <BarChart data={fundingActivityData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={{ strokeOpacity: 0.5 }} />
                       <YAxis
                         yAxisId="left"
                         orientation="left"
-                        stroke={chartConfig.disbursed.color}
-                        {...commonYAxisProps(70)} // Specify width
+                        stroke="hsl(var(--chart-primary))"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
                         tickFormatter={(value) =>
                           formatCurrency(value * 10000000, selectedCurrency.code, {
                             minimumFractionDigits: 0,
-                            maximumFractionDigits: 1,
+                            maximumFractionDigits: 1, // Show 1 decimal for Cr
+                            // notation: "compact", // Could use compact notation like 1.2Cr
                           })
                         }
+                        width={80}
                       />
                       <YAxis
                         yAxisId="right"
                         orientation="right"
-                        stroke={chartConfig.applications.color}
-                        {...commonYAxisProps(50)} // Specify width
+                        stroke="hsl(var(--chart-secondary))"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
                       />
-                      <RechartsTooltip
-                        cursor={{ fill: "hsl(var(--muted) / 0.3)" }} // Subtle cursor
+                      <ChartTooltip
+                        cursor={false}
                         content={
                           <ChartTooltipContent
-                            formatter={getCurrencyTooltipFormatter({ formatCurrency, selectedCurrency })}
                             indicator="dashed"
+                            formatter={(value, name, item) => {
+                              if (item.dataKey === "disbursed") {
+                                return formatCurrency(Number(value) * 10000000, selectedCurrency.code)
+                              }
+                              return String(value)
+                            }}
                           />
                         }
                       />
-                      <Legend {...commonLegendProps} />
+                      <Legend verticalAlign="top" height={40} />
                       <Bar
                         yAxisId="left"
                         dataKey="disbursed"
                         name={chartConfig.disbursed.label}
-                        fill={chartConfig.disbursed.color}
-                        {...commonBarStyle}
+                        fill="hsl(var(--chart-primary))"
+                        radius={[4, 4, 0, 0]}
                       />
                       <Bar
                         yAxisId="right"
                         dataKey="applications"
                         name={chartConfig.applications.label}
-                        fill={chartConfig.applications.color}
-                        {...commonBarStyle}
+                        fill="hsl(var(--chart-secondary))"
+                        radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               </CardContent>
             </Card>
-            <Card className="border hover:shadow-lg transition-shadow">
+            {/* Incubator Goals Progress */}
+            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Goal className="mr-2 h-5 w-5 text-primary" /> Incubator Goals Progress
                 </CardTitle>
                 <CardDescription className="text-sm text-muted-foreground">
-                  Tracking KPIs against targets.
+                  Tracking key performance indicators against targets.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -395,8 +387,8 @@ export function DashboardV2Content() {
                   <div key={goal.id}>
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm font-medium">{goal.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {goal.unit === "Cr" ? formatCurrency(goal.currentValueInBase) : goal.currentValueInBase} /{" "}
+                      <span className="text-sm text-muted-foreground">
+                        {goal.unit === "Cr" ? formatCurrency(goal.currentValueInBase) : goal.currentValueInBase} /
                         {goal.unit === "Cr"
                           ? formatCurrency(goal.targetValueInBase, selectedCurrency.code, {
                               minimumFractionDigits: 0,
@@ -406,11 +398,7 @@ export function DashboardV2Content() {
                         {goal.unit !== "Cr" ? goal.unit : ""}
                       </span>
                     </div>
-                    <Progress
-                      value={goal.progress}
-                      className="h-2 bg-muted"
-                      indicatorClassName="bg-charting-blue-primary"
-                    />
+                    <Progress value={goal.progress} className="h-2" />
                   </div>
                 ))}
               </CardContent>
@@ -418,31 +406,27 @@ export function DashboardV2Content() {
           </div>
 
           <div className="space-y-6">
-            <Card className="border hover:shadow-lg transition-shadow">
+            {/* Application Funnel Chart */}
+            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Target className="mr-2 h-5 w-5 text-primary" /> Application Funnel
                 </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">Conversion through stages.</CardDescription>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Conversion through application stages.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ChartContainer config={{}} className="h-[300px] w-full">
-                  <ResponsiveContainer>
-                    <BarChart
-                      data={applicationFunnelData}
-                      layout="vertical"
-                      margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
-                    >
-                      <CartesianGrid {...commonGridProps} horizontal={false} />
-                      <XAxis type="number" {...commonXAxisProps} />
-                      <YAxis dataKey="stage" type="category" {...commonYAxisProps(80)} interval={0} />
-                      <RechartsTooltip cursor={{ fill: "hsl(var(--muted) / 0.3)" }} content={<ChartTooltipContent />} />
-                      <Bar dataKey="count" name="Applications" {...commonBarStyle}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={applicationFunnelData} layout="vertical" margin={{ left: 10, right: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" />
+                      <YAxis dataKey="stage" type="category" width={80} interval={0} fontSize={11} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="count" name="Applications" radius={[0, 4, 4, 0]}>
                         {applicationFunnelData.map((entry, index) => (
-                          <Cell
-                            key={`cell-funnel-${index}`}
-                            fill={DYNAMIC_CHART_COLORS[index % DYNAMIC_CHART_COLORS.length]}
-                          />
+                          <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -450,34 +434,36 @@ export function DashboardV2Content() {
                 </ChartContainer>
               </CardContent>
             </Card>
-            <Card className="border hover:shadow-lg transition-shadow">
+            {/* Portfolio Health Chart */}
+            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <PieChartIcon className="mr-2 h-5 w-5 text-primary" /> Portfolio Health
                 </CardTitle>
                 <CardDescription className="text-sm text-muted-foreground">
-                  Risk assessment distribution.
+                  Distribution of startups by risk assessment.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ChartContainer config={{}} className="h-[250px] w-full">
                   <ResponsiveContainer>
-                    <PieChart margin={{ top: 0, right: 0, bottom: 30, left: 0 }}>
-                      <RechartsTooltip cursor={{ fill: "hsl(var(--muted) / 0.3)" }} content={<ChartTooltipContent />} />
+                    <PieChart>
                       <Pie
                         data={portfolioHealthDistribution}
                         dataKey="value"
                         nameKey="name"
-                        {...commonPieProps}
-                        label={commonPieLabel}
-                        stroke={CHART_PALETTE.background} // Add border to pie segments
-                        strokeWidth={1}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={70}
+                        labelLine={false}
+                        label={({ name, percent }) => `${name.split(" ")[0]}: ${(percent * 100).toFixed(0)}%`}
                       >
                         {portfolioHealthDistribution.map((entry) => (
-                          <Cell key={`cell-health-${entry.name}`} fill={entry.fill} />
+                          <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                         ))}
                       </Pie>
-                      <Legend {...commonLegendProps} verticalAlign="bottom" />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Legend verticalAlign="bottom" height={36} iconSize={10} wrapperStyle={{ fontSize: "12px" }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </ChartContainer>
@@ -486,29 +472,28 @@ export function DashboardV2Content() {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="border hover:shadow-lg transition-shadow">
+        {/* Sector and Stage Distribution Charts */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+          <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <BarChart3Icon className="mr-2 h-5 w-5 text-primary" /> Sector Distribution
               </CardTitle>
-              <CardDescription className="text-sm text-muted-foreground">Startups per sector.</CardDescription>
+              <CardDescription className="text-sm text-muted-foreground">
+                Number of startups per sector.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ChartContainer config={{}} className="h-[250px] w-full">
                 <ResponsiveContainer>
-                  <BarChart
-                    data={sectorDistribution}
-                    layout="vertical"
-                    margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
-                  >
-                    <CartesianGrid {...commonGridProps} horizontal={false} />
-                    <XAxis type="number" {...commonXAxisProps} />
-                    <YAxis dataKey="name" type="category" {...commonYAxisProps(80)} interval={0} />
-                    <RechartsTooltip cursor={{ fill: "hsl(var(--muted) / 0.3)" }} content={<ChartTooltipContent />} />
-                    <Bar dataKey="value" name="Startups" {...commonBarStyle}>
+                  <BarChart data={sectorDistribution} layout="vertical" margin={{ left: 10, right: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis type="number" />
+                    <YAxis dataKey="name" type="category" width={80} interval={0} fontSize={11} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="value" name="Startups" radius={[0, 4, 4, 0]}>
                       {sectorDistribution.map((entry) => (
-                        <Cell key={`cell-sector-${entry.name}`} fill={entry.fill} />
+                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -516,36 +501,26 @@ export function DashboardV2Content() {
               </ChartContainer>
             </CardContent>
           </Card>
-          <Card className="border hover:shadow-lg transition-shadow">
+          <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Briefcase className="mr-2 h-5 w-5 text-primary" /> Stage Distribution
               </CardTitle>
               <CardDescription className="text-sm text-muted-foreground">
-                Startups per investment stage.
+                Number of startups per investment stage.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ChartContainer config={{}} className="h-[250px] w-full">
                 <ResponsiveContainer>
-                  <BarChart
-                    data={stageDistribution}
-                    margin={{ left: -10, right: 10, bottom: 50 /* Increased bottom margin */, top: 5 }}
-                  >
-                    <CartesianGrid {...commonGridProps} vertical={false} />
-                    <XAxis
-                      dataKey="name"
-                      {...commonXAxisProps}
-                      interval={0}
-                      angle={-40}
-                      textAnchor="end"
-                      height={60 /* Adjusted height */}
-                    />
-                    <YAxis {...commonYAxisProps(50)} />
-                    <RechartsTooltip cursor={{ fill: "hsl(var(--muted) / 0.3)" }} content={<ChartTooltipContent />} />
-                    <Bar dataKey="value" name="Startups" {...commonBarStyle}>
+                  <BarChart data={stageDistribution} margin={{ left: -10, right: 10, bottom: 30 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" fontSize={11} interval={0} angle={-40} textAnchor="end" height={60} />
+                    <YAxis />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="value" name="Startups" radius={[4, 4, 0, 0]}>
                       {stageDistribution.map((entry) => (
-                        <Cell key={`cell-stage-${entry.name}`} fill={entry.fill} />
+                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -555,19 +530,20 @@ export function DashboardV2Content() {
           </Card>
         </div>
 
+        {/* Portfolio Snapshot and Tasks/Activity */}
         <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-2 border hover:shadow-lg transition-shadow">
+          <Card className="lg:col-span-2 border hover:shadow-xl transition-shadow duration-300 ease-in-out">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center">
                   <Building2 className="mr-2 h-5 w-5 text-primary" /> Portfolio Snapshot
                 </CardTitle>
                 <CardDescription className="text-sm text-muted-foreground">
-                  Quick overview of key startups.
+                  Quick overview of recent or key startups.
                 </CardDescription>
               </div>
               <Button variant="outline" size="sm" onClick={handleViewAllPortfolio}>
-                <ListFilter className="mr-2 h-4 w-4" /> View All
+                <ListFilter className="mr-2 h-4 w-4" /> View All Portfolio
               </Button>
             </CardHeader>
             <CardContent className="overflow-x-auto">
@@ -608,9 +584,8 @@ export function DashboardV2Content() {
                             startup.healthScore > 80 ? "default" : startup.healthScore > 60 ? "outline" : "destructive"
                           }
                           className={cn(
-                            startup.healthScore > 80 && "bg-charting-positive text-white",
-                            startup.healthScore <= 60 && "bg-charting-negative text-white",
-                            startup.healthScore > 60 && startup.healthScore <= 80 && "bg-charting-warning text-black",
+                            startup.healthScore > 80 && "bg-charting-positive text-charting-positive-foreground",
+                            startup.healthScore <= 60 && "bg-charting-negative text-charting-negative-foreground",
                           )}
                         >
                           {startup.healthScore}%
@@ -629,7 +604,7 @@ export function DashboardV2Content() {
           </Card>
 
           <div className="space-y-6">
-            <Card className="border hover:shadow-lg transition-shadow">
+            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <ClipboardCheck className="mr-2 h-5 w-5 text-primary" /> Your Pending Tasks
@@ -646,7 +621,9 @@ export function DashboardV2Content() {
                         </div>
                         <Badge
                           variant={task.priority === "High" ? "destructive" : "secondary"}
-                          className={cn(task.priority === "High" && "bg-charting-negative text-white")}
+                          className={cn(
+                            task.priority === "High" && "bg-red-500 text-white dark:bg-red-700 dark:text-red-100",
+                          )}
                         >
                           {task.priority}
                         </Badge>
@@ -663,7 +640,7 @@ export function DashboardV2Content() {
                 </Button>
               </CardFooter>
             </Card>
-            <Card className="border hover:shadow-lg transition-shadow">
+            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <BellRing className="mr-2 h-5 w-5 text-primary" /> Recent Activity
