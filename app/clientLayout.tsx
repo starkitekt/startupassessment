@@ -1,36 +1,33 @@
 "use client"
 
 import type React from "react"
-import { Inter } from "next/font/google" // Using Next/Font for optimization
-import "./globals.css"
+// Inter font import is removed as it's handled in RootLayout
 import { ThemeProvider } from "@/components/theme-provider"
-import { TopNavigation } from "@/components/top-navigation"
+import { SideNavigation } from "@/components/side-navigation"
 import { Toaster } from "@/components/ui/toaster"
 import { GlobalSettingsProvider, useGlobalSettings } from "@/contexts/global-settings-context"
 import { cn } from "@/lib/utils"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 import { usePathname } from "next/navigation"
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter", // Optional: if you want to use it as a CSS variable
-  display: "swap", // Ensures text remains visible during font loading
-})
+// Inter font initialization is removed
 
-// Inner component to access GlobalSettingsContext after provider is set up
 function AppContent({ children }: { children: React.ReactNode }) {
-  const { selectedCountry, isExchangeRateLoading } = useGlobalSettings() // Added isExchangeRateLoading
+  const { selectedCountry, isExchangeRateLoading } = useGlobalSettings()
   const pathname = usePathname()
 
   return (
-    <body className={cn(inter.className, "flex flex-col min-h-screen bg-background font-geist antialiased")}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        <TopNavigation />
-        {/* Informational banner for country selection and loading state */}
+    // The outermost div with inter.className and body styles is removed.
+    // ThemeProvider is now the top-level wrapper from this component.
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <SideNavigation />
+      <div className="md:pl-72 flex flex-col flex-1">
+        {" "}
+        {/* This div structures the content area beside the sidebar */}
         {(selectedCountry || isExchangeRateLoading) && (
           <div
             className={cn(
-              "text-xs text-center py-1 transition-all duration-300",
+              "text-xs text-center py-1 transition-all duration-300 sticky top-0 z-20",
               isExchangeRateLoading ? "bg-amber-500 text-white" : "bg-secondary text-secondary-foreground",
             )}
           >
@@ -40,8 +37,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
           </div>
         )}
         <main className="flex-grow container mx-auto px-4 py-6 max-w-screen-2xl">
-          {/* Render breadcrumbs for all paths except the home page */}
-          {pathname !== "/" && <Breadcrumbs />}
+          <div className="mt-12 md:mt-0">{pathname !== "/" && <Breadcrumbs />}</div>
           {children}
         </main>
         <Toaster />
@@ -50,17 +46,15 @@ function AppContent({ children }: { children: React.ReactNode }) {
             <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
               © {new Date().getFullYear()} Startup Incubator Portal. All rights reserved. (Demo Application)
             </p>
-            {/* Add any other footer links or info here */}
           </div>
         </footer>
-      </ThemeProvider>
-    </body>
+      </div>
+    </ThemeProvider>
   )
 }
 
 export default function ClientLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    // GlobalSettingsProvider wraps AppContent so useGlobalSettings can be used within it
     <GlobalSettingsProvider>
       <AppContent>{children}</AppContent>
     </GlobalSettingsProvider>

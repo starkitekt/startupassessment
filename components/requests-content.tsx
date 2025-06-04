@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useMemo, useEffect, useCallback } from "react" // Added useCallback
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs" // Added Tabs
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,14 +16,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { PlusCircle, Filter, Search, MoreHorizontal, Eye, Edit3, ListChecks, Trash2 } from "lucide-react"
+import { PlusCircle, Filter, Search, MoreHorizontal, Eye, Edit3, ListChecks, Trash2, CalendarDays } from "lucide-react" // Added CalendarDays
 import { useToast } from "@/components/ui/use-toast"
 import { cn } from "@/lib/utils"
-import { useUserRole, mockUsers } from "@/hooks/use-user-role" // Imported UserRole
+import { useUserRole, mockUsers } from "@/hooks/use-user-role"
 import { RequestFormModal } from "./request-form-modal"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Skeleton } from "./ui/skeleton"
 import { Label } from "@/components/ui/label"
+import { format, parseISO } from "date-fns"
 
 // --- Type Definitions ---
 export type RequestStatus = "Pending" | "In Progress" | "On Hold" | "Completed" | "Rejected"
@@ -48,6 +50,7 @@ export interface RequestItem {
   assignedTo?: { id: string; name: string }
   createdAt: string
   updatedAt: string
+  dueDate?: string // Added dueDate
   comments?: RequestComment[]
 }
 
@@ -65,6 +68,7 @@ const initialMockRequests: RequestItem[] = [
     assignedTo: mockUsers.find((u) => u.name.includes("Admin")) || mockUsers[0],
     createdAt: "2024-05-20T10:00:00Z",
     updatedAt: "2024-05-20T10:00:00Z",
+    dueDate: "2024-06-15T10:00:00Z",
     comments: [],
   },
   {
@@ -78,9 +82,22 @@ const initialMockRequests: RequestItem[] = [
     assignedTo: mockUsers.find((u) => u.name.includes("Sneha")) || mockUsers[3],
     createdAt: "2024-05-18T14:30:00Z",
     updatedAt: "2024-05-21T11:00:00Z",
+    dueDate: "2024-07-01T10:00:00Z",
     comments: [],
   },
-  // Add more diverse requests
+  {
+    id: "REQ-003",
+    title: "Bug Fix: User Login Issue on Mobile",
+    description: "Users are reporting intermittent login failures on mobile devices (iOS and Android).",
+    priority: "High",
+    type: "Bug",
+    status: "Pending",
+    submittedBy: mockUsers.find((u) => u.name.includes("Viewer")) || mockUsers[2],
+    createdAt: "2024-06-01T09:00:00Z",
+    updatedAt: "2024-06-01T09:00:00Z",
+    dueDate: "2024-06-10T10:00:00Z",
+    comments: [],
+  },
 ]
 
 const STATUSES: ReadonlyArray<RequestStatus> = ["Pending", "In Progress", "On Hold", "Completed", "Rejected"]
@@ -95,6 +112,7 @@ export function RequestsContent() {
   const [filters, setFilters] = useState({ status: "All", priority: "All", type: "All", assignedTo: "All" })
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingRequest, setEditingRequest] = useState<RequestItem | null>(null)
+  const [activeTab, setActiveTab] = useState("list") // "list" or "calendar"
 
   const { toast } = useToast()
   const { role, userId } = useUserRole()
@@ -109,7 +127,21 @@ export function RequestsContent() {
   }
 
   const filteredRequests = useMemo(() => {
-    return requests.filter((req) => {
+    const sortedRequests = [...requests]
+    if (activeTab === "calendar") {
+      // Sort by due date for calendar view, requests without due date last
+      sortedRequests.sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0
+        if (!a.dueDate) return 1
+        if (!b.dueDate) return -1
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+      })
+    } else {
+      // Default sort by creation date for list view
+      sortedRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    }
+
+    return sortedRequests.filter((req) => {
       const searchMatch =
         req.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         req.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -129,7 +161,7 @@ export function RequestsContent() {
       }
       return searchMatch && statusMatch && priorityMatch && typeMatch && assignmentMatch
     })
-  }, [requests, searchTerm, filters, role, userId])
+  }, [requests, searchTerm, filters, role, userId, activeTab])
 
   const handleNewRequest = useCallback(() => {
     setEditingRequest(null)
@@ -150,24 +182,24 @@ export function RequestsContent() {
   )
 
   const handleSubmitRequest = useCallback(
-    (newOrUpdatedRequest: RequestItem) => {
+    (newOrUpdatedRequest: RequestItem, notifyByEmail: boolean) => {
       setRequests((prev) => {
         const existingIndex = prev.findIndex((r) => r.id === newOrUpdatedRequest.id)
         if (existingIndex > -1) {
           const updatedRequests = [...prev]
           updatedRequests[existingIndex] = { ...newOrUpdatedRequest, updatedAt: new Date().toISOString() }
-          return updatedRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          return updatedRequests
         }
         return [
           { ...newOrUpdatedRequest, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
           ...prev,
-        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        ]
       })
       toast({
         title: editingRequest ? "Request Updated" : "Request Created",
-        description: `${newOrUpdatedRequest.title} has been saved.`,
+        description: `${newOrUpdatedRequest.title} has been saved. ${notifyByEmail ? "(Simulated email notification sent)" : ""}`,
       })
-      setEditingRequest(null) // Reset editing state
+      setEditingRequest(null)
     },
     [toast, editingRequest],
   )
@@ -184,7 +216,6 @@ export function RequestsContent() {
     [toast],
   )
 
-  // RBAC permission checks (memoized for stability if passed as props, though not strictly necessary here)
   const canCreateRequest = useMemo(() => role === "admin" || role === "editor", [role])
   const canDeleteRequest = useCallback(
     (requestOwnerId: string) => role === "admin" || (role === "editor" && requestOwnerId === userId),
@@ -201,6 +232,7 @@ export function RequestsContent() {
   )
 
   if (isLoading) {
+    // Skeleton remains the same
     return (
       <div className="space-y-6 p-4 md:p-6">
         <div className="flex items-center justify-between">
@@ -238,7 +270,7 @@ export function RequestsContent() {
         <Card>
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center text-xl">
-              <Filter className="mr-2 h-5 w-5 text-jpmc-blue" /> Filters
+              <Filter className="mr-2 h-5 w-5 text-primary" /> Filters
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -306,7 +338,8 @@ export function RequestsContent() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="All">All Users</SelectItem> <SelectItem value="Me">Assigned to Me</SelectItem>
+                    <SelectItem value="All">All Users</SelectItem>
+                    <SelectItem value="Me">Assigned to Me</SelectItem>
                     <SelectItem value="Unassigned">Unassigned</SelectItem>
                     {mockUsers.map((u) => (
                       <SelectItem key={u.id} value={u.id}>
@@ -320,154 +353,221 @@ export function RequestsContent() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <ListChecks className="mr-2 h-5 w-5 text-primary" /> Submitted Requests
-            </CardTitle>
-            <CardDescription>
-              Displaying {filteredRequests.length} of {requests.length} total requests.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Submitted By</TableHead>
-                  <TableHead>Assigned To</TableHead>
-                  <TableHead>Last Updated</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRequests.length > 0 ? (
-                  filteredRequests.map((req) => (
-                    <TableRow key={req.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">{req.id}</TableCell>
-                      <TableCell>
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-default text-left block max-w-xs truncate">
-                            <span className="font-medium">{req.title}</span>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side="top"
-                            align="start"
-                            className="max-w-sm bg-background border shadow-lg p-2 rounded-md"
-                          >
-                            <p className="font-bold text-foreground">{req.title}</p>
-                            <p className="text-xs text-muted-foreground">{req.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            req.status === "Completed"
-                              ? "default"
-                              : req.status === "Rejected"
-                                ? "destructive"
-                                : "outline"
-                          }
-                          className={cn(
-                            req.status === "Completed" && "bg-green-500 text-white dark:bg-green-600 dark:text-white",
-                            req.status === "In Progress" &&
-                              "border-blue-500 text-blue-500 dark:border-blue-400 dark:text-blue-400",
-                            req.status === "Pending" &&
-                              "border-amber-500 text-amber-500 dark:border-amber-400 dark:text-amber-400",
-                          )}
-                        >
-                          {req.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            req.priority === "High"
-                              ? "destructive"
-                              : req.priority === "Medium"
-                                ? "secondary"
-                                : "outline"
-                          }
-                          className={cn(
-                            req.priority === "High" && "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
-                            req.priority === "Medium" &&
-                              "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
-                            req.priority === "Low" &&
-                              "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-                          )}
-                        >
-                          {req.priority}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{req.type}</TableCell>
-                      <TableCell>{req.submittedBy.name}</TableCell>
-                      <TableCell>
-                        {req.assignedTo?.name || <span className="text-muted-foreground italic">Unassigned</span>}
-                      </TableCell>
-                      <TableCell>{new Date(req.updatedAt).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() =>
-                                toast({
-                                  title: "Viewing Request (Simulated)",
-                                  description: `Details for ${req.id} would open.`,
-                                })
-                              }
-                            >
-                              <Eye className="mr-2 h-4 w-4" /> View Details
-                            </DropdownMenuItem>
-                            {canEditRequest(req.submittedBy.id, req.assignedTo?.id) && (
-                              <DropdownMenuItem onClick={() => handleEditRequest(req)}>
-                                <Edit3 className="mr-2 h-4 w-4" /> Edit Request
-                              </DropdownMenuItem>
-                            )}
-                            {canChangeStatus(req.assignedTo?.id) && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuLabel>Change Status</DropdownMenuLabel>
-                                {STATUSES.filter((s) => s !== req.status).map((status) => (
-                                  <DropdownMenuItem key={status} onClick={() => handleChangeStatus(req.id, status)}>
-                                    Set to {status}
-                                  </DropdownMenuItem>
-                                ))}
-                              </>
-                            )}
-                            {canDeleteRequest(req.submittedBy.id) && (
-                              <DropdownMenuItem
-                                className="text-red-600 hover:!text-red-600 dark:hover:!text-red-500"
-                                onClick={() => handleDeleteRequest(req.id)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete Request
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2 md:w-1/3">
+            <TabsTrigger value="list">
+              <ListChecks className="mr-2 h-4 w-4" /> List View
+            </TabsTrigger>
+            <TabsTrigger value="calendar">
+              <CalendarDays className="mr-2 h-4 w-4" /> Calendar View
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="list">
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <ListChecks className="mr-2 h-5 w-5 text-primary" /> Submitted Requests
+                </CardTitle>
+                <CardDescription>
+                  Displaying {filteredRequests.length} of {requests.length} total requests.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Assigned To</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
-                  ))
+                  </TableHeader>
+                  <TableBody>
+                    {filteredRequests.length > 0 ? (
+                      filteredRequests.map((req) => (
+                        <TableRow key={req.id} className="hover:bg-muted/50">
+                          <TableCell className="font-medium">{req.id}</TableCell>
+                          <TableCell>
+                            <Tooltip>
+                              <TooltipTrigger className="cursor-default text-left block max-w-xs truncate">
+                                <span className="font-medium">{req.title}</span>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                align="start"
+                                className="max-w-sm bg-background border shadow-lg p-2 rounded-md"
+                              >
+                                <p className="font-bold text-foreground">{req.title}</p>
+                                <p className="text-xs text-muted-foreground">{req.description}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                req.status === "Completed"
+                                  ? "default"
+                                  : req.status === "Rejected"
+                                    ? "destructive"
+                                    : "outline"
+                              }
+                              className={cn(
+                                req.status === "Completed" &&
+                                  "bg-green-500 text-white dark:bg-green-600 dark:text-white",
+                                req.status === "In Progress" &&
+                                  "border-blue-500 text-blue-500 dark:border-blue-400 dark:text-blue-400",
+                                req.status === "Pending" &&
+                                  "border-amber-500 text-amber-500 dark:border-amber-400 dark:text-amber-400",
+                              )}
+                            >
+                              {req.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                req.priority === "High"
+                                  ? "destructive"
+                                  : req.priority === "Medium"
+                                    ? "secondary"
+                                    : "outline"
+                              }
+                              className={cn(
+                                req.priority === "High" && "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+                                req.priority === "Medium" &&
+                                  "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
+                                req.priority === "Low" &&
+                                  "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+                              )}
+                            >
+                              {req.priority}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {req.dueDate ? (
+                              format(parseISO(req.dueDate), "MMM d, yyyy")
+                            ) : (
+                              <span className="text-muted-foreground italic">N/A</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {req.assignedTo?.name || <span className="text-muted-foreground italic">Unassigned</span>}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    toast({
+                                      title: "Viewing Request (Simulated)",
+                                      description: `Details for ${req.id} would open.`,
+                                    })
+                                  }
+                                >
+                                  <Eye className="mr-2 h-4 w-4" /> View Details
+                                </DropdownMenuItem>
+                                {canEditRequest(req.submittedBy.id, req.assignedTo?.id) && (
+                                  <DropdownMenuItem onClick={() => handleEditRequest(req)}>
+                                    <Edit3 className="mr-2 h-4 w-4" /> Edit Request
+                                  </DropdownMenuItem>
+                                )}
+                                {canChangeStatus(req.assignedTo?.id) && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+                                    {STATUSES.filter((s) => s !== req.status).map((status) => (
+                                      <DropdownMenuItem key={status} onClick={() => handleChangeStatus(req.id, status)}>
+                                        Set to {status}
+                                      </DropdownMenuItem>
+                                    ))}
+                                  </>
+                                )}
+                                {canDeleteRequest(req.submittedBy.id) && (
+                                  <DropdownMenuItem
+                                    className="text-red-600 hover:!text-red-600 dark:hover:!text-red-500"
+                                    onClick={() => handleDeleteRequest(req.id)}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete Request
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                          No requests found matching your criteria.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="calendar">
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <CalendarDays className="mr-2 h-5 w-5 text-primary" /> Requests Calendar View (Simplified)
+                </CardTitle>
+                <CardDescription>
+                  Showing {filteredRequests.filter((r) => r.dueDate).length} requests with due dates. Full calendar
+                  component to be implemented.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {filteredRequests.filter((r) => r.dueDate).length > 0 ? (
+                  <ul className="space-y-3">
+                    {filteredRequests
+                      .filter((r) => r.dueDate)
+                      .map((req) => (
+                        <li key={req.id} className="p-3 border rounded-md hover:bg-muted/50">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-semibold">{req.title}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Due: {format(parseISO(req.dueDate!), "PPP")}
+                              </p>
+                            </div>
+                            <Badge
+                              variant={
+                                req.priority === "High"
+                                  ? "destructive"
+                                  : req.priority === "Medium"
+                                    ? "secondary"
+                                    : "outline"
+                              }
+                              className="text-xs"
+                            >
+                              {req.priority}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Assigned to: {req.assignedTo?.name || "Unassigned"}
+                          </p>
+                        </li>
+                      ))}
+                  </ul>
                 ) : (
-                  <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center">
-                      No requests found matching your criteria.
-                    </TableCell>
-                  </TableRow>
+                  <p className="text-center text-muted-foreground py-8">
+                    No requests with due dates found matching your criteria.
+                  </p>
                 )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         <RequestFormModal
           isOpen={isModalOpen}
@@ -482,16 +582,13 @@ export function RequestsContent() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-2">
             <p>
-              <strong>Real-time Updates:</strong> In a production system, this request list would update dynamically
-              using WebSockets or similar technology, reflecting changes from other users instantly.
+              <strong>Email Notifications:</strong> Simulated email notifications are mentioned in toasts. Real
+              integration would use a backend email service.
             </p>
             <p>
-              <strong>Notifications:</strong> Users would typically receive in-app and email notifications for key
-              events like new assignments, status changes, or comments on their requests.
-            </p>
-            <p>
-              <strong>Detailed View & Audit Trail:</strong> A dedicated page for each request would show its full
-              history, comments, attachments, and an audit trail of changes.
+              <strong>Calendar View:</strong> A simplified list view for due dates is provided. A full interactive
+              calendar (e.g., using a library like FullCalendar or react-big-calendar) would offer drag-and-drop
+              scheduling and more views.
             </p>
           </CardContent>
         </Card>

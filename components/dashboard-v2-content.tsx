@@ -1,55 +1,87 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react" // Added useEffect
+import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend, PieChart, Pie, Cell } from "recharts"
-import { Progress } from "@/components/ui/progress"
-import {
-  TrendingUp,
-  Building2,
-  Users,
-  DollarSign,
-  FileText,
-  CheckCircle,
-  PlusCircle,
-  Activity,
-  Eye,
-  ListFilter,
-  BellRing,
-  ClipboardCheck,
-  PieChartIcon,
-  BarChart3Icon,
-  Briefcase,
-  Target,
-  Goal,
-} from "lucide-react"
-// Removed useToast as it's not directly used here, errors are handled in GlobalSettingsContext
-import { cn } from "@/lib/utils"
+import { PlusCircle, Building2, FileText, DollarSign, Users, CheckCircle } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useGlobalSettings } from "@/contexts/global-settings-context"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/ui/tooltip"
+
+// Import modular components
+import { KeyMetricsCards } from "./dashboard-v2/key-metrics-cards"
+import { FundingApplicationChart } from "./dashboard-v2/funding-application-chart"
+import { ApplicationFunnelChart } from "./dashboard-v2/application-funnel-chart"
+import { PortfolioHealthChart } from "./dashboard-v2/portfolio-health-chart"
+import { SectorDistributionChart } from "./dashboard-v2/sector-distribution-chart"
+import { StageDistributionChart } from "./dashboard-v2/stage-distribution-chart"
+import { PortfolioSnapshotTable } from "./dashboard-v2/portfolio-snapshot-table"
+import { PendingTasksCard } from "./dashboard-v2/pending-tasks-card"
+import { RecentActivityCard } from "./dashboard-v2/recent-activity-card"
+import { IncubatorGoalsProgress } from "./dashboard-v2/incubator-goals-progress"
 
 // --- Mock Data Definitions ---
-// Assuming MRR and funding values are in BASE_CURRENCY (INR)
 const mockPortfoliosSnapshot = [
-  { id: "STP001", name: "Innovatech Solutions", sector: "FinTech", stage: "Seed", healthScore: 85, mrr: 1500000 }, // e.g. 15 Lakh INR
-  { id: "STP002", name: "HealthWell AI", sector: "HealthTech", stage: "Series A", healthScore: 78, mrr: 4500000 },
-  { id: "STP003", name: "EduSphere Learning", sector: "EdTech", stage: "Pre-Seed", healthScore: 92, mrr: 200000 },
-  { id: "STP004", name: "AgriGrow Innovations", sector: "AgriTech", stage: "Seed", healthScore: 80, mrr: 800000 },
-  { id: "STP005", name: "Retail Rocket", sector: "E-commerce", stage: "Growth", healthScore: 70, mrr: 6000000 },
-  { id: "STP006", name: "SaaSify Ltd", sector: "SaaS", stage: "Series A", healthScore: 88, mrr: 7500000 },
+  {
+    id: "STP001",
+    name: "Innovatech Solutions",
+    logoUrl: "/placeholder.svg?height=32&width=32&text=IS",
+    sector: "FinTech",
+    stage: "Seed",
+    healthScore: 85,
+    mrr: 1500000,
+  }, // e.g. 15 Lakh INR
+  {
+    id: "STP002",
+    name: "HealthWell AI",
+    logoUrl: "/placeholder.svg?height=32&width=32&text=HA",
+    sector: "HealthTech",
+    stage: "Series A",
+    healthScore: 78,
+    mrr: 4500000,
+  },
+  {
+    id: "STP003",
+    name: "EduSphere Learning",
+    logoUrl: "/placeholder.svg?height=32&width=32&text=EL",
+    sector: "EdTech",
+    stage: "Pre-Seed",
+    healthScore: 92,
+    mrr: 200000,
+  },
+  {
+    id: "STP004",
+    name: "AgriGrow Innovations",
+    logoUrl: "/placeholder.svg?height=32&width=32&text=AG",
+    sector: "AgriTech",
+    stage: "Seed",
+    healthScore: 80,
+    mrr: 800000,
+  },
+  {
+    id: "STP005",
+    name: "Retail Rocket",
+    logoUrl: "/placeholder.svg?height=32&width=32&text=RR",
+    sector: "E-commerce",
+    stage: "Growth",
+    healthScore: 70,
+    mrr: 6000000,
+  },
+  {
+    id: "STP006",
+    name: "SaaSify Ltd",
+    logoUrl: "/placeholder.svg?height=32&width=32&text=SL",
+    sector: "SaaS",
+    stage: "Series A",
+    healthScore: 88,
+    mrr: 7500000,
+  },
 ]
 
 const keyMetricsData = [
   {
     title: "Total Startups",
-    value: "1,247", // Static value
+    value: "1,247",
     trend: "+12.5%",
     icon: Building2,
     trendColor: "text-charting-positive",
@@ -57,7 +89,7 @@ const keyMetricsData = [
   },
   {
     title: "Active Applications",
-    value: "89", // Static value
+    value: "89",
     trend: "+8.2%",
     icon: FileText,
     trendColor: "text-charting-positive",
@@ -73,7 +105,7 @@ const keyMetricsData = [
   },
   {
     title: "Mentors Active",
-    value: "42", // Static value
+    value: "42",
     trend: "+5",
     icon: Users,
     trendColor: "text-charting-positive",
@@ -81,9 +113,8 @@ const keyMetricsData = [
   },
 ]
 
-// Assuming 'disbursed' is in Crores of INR
 const fundingActivityData = [
-  { month: "Jan", disbursed: 1.2, applications: 45 }, // 1.2 Cr INR
+  { month: "Jan", disbursed: 1.2, applications: 45 },
   { month: "Feb", disbursed: 1.8, applications: 52 },
   { month: "Mar", disbursed: 2.5, applications: 48 },
   { month: "Apr", disbursed: 2.1, applications: 61 },
@@ -131,20 +162,19 @@ const pendingTasks = [
   { id: "TSK002", title: "Schedule Follow-up with HealthWell AI", dueDate: "In 3 days", priority: "Medium" },
 ]
 
-// Assuming currentValue and targetValue for funding are in Crores of INR
 const incubatorGoals = [
   {
     id: "goal1",
     name: "Annual Funding Disbursed",
     currentValueInBase: 24.8 * 10000000, // 24.8 Cr INR
     targetValueInBase: 50 * 10000000, // 50 Cr INR
-    unit: "Cr", // Unit for display context, actual value is in base
+    unit: "Cr",
     progress: (24.8 / 50) * 100,
   },
   {
     id: "goal2",
     name: "New Startups Onboarded (Q3)",
-    currentValueInBase: 12, // Assuming this is a count, not currency
+    currentValueInBase: 12,
     targetValueInBase: 20,
     unit: "",
     progress: (12 / 20) * 100,
@@ -152,7 +182,7 @@ const incubatorGoals = [
   {
     id: "goal3",
     name: "Successful Exits (YTD)",
-    currentValueInBase: 3, // Assuming this is a count
+    currentValueInBase: 3,
     targetValueInBase: 5,
     unit: "",
     progress: (3 / 5) * 100,
@@ -169,36 +199,26 @@ const CHART_COLORS = [
   "hsl(var(--chart-accent2))",
 ]
 
-// --- Component ---
 export function DashboardV2Content() {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const { formatCurrency, selectedCountry, selectedCurrency, isExchangeRateLoading } = useGlobalSettings()
+  const { selectedCountry, selectedCurrency, isExchangeRateLoading } = useGlobalSettings()
 
-  // Simulate initial loading
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 1000)
     return () => clearTimeout(timer)
   }, [])
-
-  const chartConfig = useMemo(
-    () => ({
-      disbursed: { label: `Disbursed (${selectedCurrency.code} Cr)`, color: "hsl(var(--chart-primary))" },
-      applications: { label: "Applications", color: "hsl(var(--chart-secondary))" },
-    }),
-    [selectedCurrency.code],
-  )
 
   const portfolioHealthDistribution = useMemo(() => {
     const healthy = mockPortfoliosSnapshot.filter((s) => s.healthScore >= 80).length
     const average = mockPortfoliosSnapshot.filter((s) => s.healthScore >= 60 && s.healthScore < 80).length
     const atRisk = mockPortfoliosSnapshot.filter((s) => s.healthScore < 60).length
     return [
-      { name: "Healthy (>=80%)", value: healthy, fill: "var(--chart-positive)" }, // Using CSS variables for colors
+      { name: "Healthy (>=80%)", value: healthy, fill: "var(--chart-positive)" },
       { name: "Average (60-79%)", value: average, fill: "var(--chart-accent1)" },
       { name: "At Risk (<60%)", value: atRisk, fill: "var(--chart-negative)" },
     ]
-  }, []) // No external dependencies, runs once
+  }, [])
 
   const sectorDistribution = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -210,7 +230,7 @@ export function DashboardV2Content() {
       value,
       fill: CHART_COLORS[index % CHART_COLORS.length],
     }))
-  }, []) // No external dependencies, runs once
+  }, [])
 
   const stageDistribution = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -222,14 +242,12 @@ export function DashboardV2Content() {
       value,
       fill: CHART_COLORS[index % CHART_COLORS.length],
     }))
-  }, []) // No external dependencies, runs once
+  }, [])
 
   const handleViewAllPortfolio = () => router.push("/portfolio")
-  const handleViewStartup = (startupId: string) => router.push(`/portfolio/${startupId}`)
   const handleNewAssessment = () => router.push("/assessments/new")
   const handleViewAllTasks = () => router.push("/tasks")
 
-  // Skeleton loader for initial load or when exchange rates are loading
   if (isLoading || isExchangeRateLoading) {
     return (
       <div className="space-y-6 lg:space-y-8 p-4 md:p-6">
@@ -269,396 +287,30 @@ export function DashboardV2Content() {
           </Button>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {keyMetricsData.map((metric) => (
-            <Card key={metric.title} className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <CardTitle className="text-base font-medium cursor-help">{metric.title}</CardTitle>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{metric.tooltip}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <metric.icon className="h-5 w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-numerical">
-                  {metric.valueAsNumber ? formatCurrency(metric.valueAsNumber) : metric.value}
-                </div>
-                <p className={cn("text-xs text-muted-foreground flex items-center", metric.trendColor)}>
-                  <TrendingUp className="h-3 w-3 mr-1" /> {metric.trend}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <KeyMetricsCards metrics={keyMetricsData} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            {/* Funding & Application Activity Chart */}
-            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Activity className="mr-2 h-5 w-5 text-primary" /> Funding & Application Activity
-                </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">
-                  Monthly trends for funding disbursed and applications received.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                  <ResponsiveContainer>
-                    <BarChart data={fundingActivityData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={{ strokeOpacity: 0.5 }} />
-                      <YAxis
-                        yAxisId="left"
-                        orientation="left"
-                        stroke="hsl(var(--chart-primary))"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(value) =>
-                          formatCurrency(value * 10000000, selectedCurrency.code, {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 1, // Show 1 decimal for Cr
-                            // notation: "compact", // Could use compact notation like 1.2Cr
-                          })
-                        }
-                        width={80}
-                      />
-                      <YAxis
-                        yAxisId="right"
-                        orientation="right"
-                        stroke="hsl(var(--chart-secondary))"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <ChartTooltip
-                        cursor={false}
-                        content={
-                          <ChartTooltipContent
-                            indicator="dashed"
-                            formatter={(value, name, item) => {
-                              if (item.dataKey === "disbursed") {
-                                return formatCurrency(Number(value) * 10000000, selectedCurrency.code)
-                              }
-                              return String(value)
-                            }}
-                          />
-                        }
-                      />
-                      <Legend verticalAlign="top" height={40} />
-                      <Bar
-                        yAxisId="left"
-                        dataKey="disbursed"
-                        name={chartConfig.disbursed.label}
-                        fill="hsl(var(--chart-primary))"
-                        radius={[4, 4, 0, 0]}
-                      />
-                      <Bar
-                        yAxisId="right"
-                        dataKey="applications"
-                        name={chartConfig.applications.label}
-                        fill="hsl(var(--chart-secondary))"
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-            {/* Incubator Goals Progress */}
-            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Goal className="mr-2 h-5 w-5 text-primary" /> Incubator Goals Progress
-                </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">
-                  Tracking key performance indicators against targets.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {incubatorGoals.map((goal) => (
-                  <div key={goal.id}>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-medium">{goal.name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {goal.unit === "Cr" ? formatCurrency(goal.currentValueInBase) : goal.currentValueInBase} /
-                        {goal.unit === "Cr"
-                          ? formatCurrency(goal.targetValueInBase, selectedCurrency.code, {
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0,
-                            })
-                          : goal.targetValueInBase}{" "}
-                        {goal.unit !== "Cr" ? goal.unit : ""}
-                      </span>
-                    </div>
-                    <Progress value={goal.progress} className="h-2" />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            <FundingApplicationChart data={fundingActivityData} />
+            <IncubatorGoalsProgress goals={incubatorGoals} />
           </div>
 
           <div className="space-y-6">
-            {/* Application Funnel Chart */}
-            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Target className="mr-2 h-5 w-5 text-primary" /> Application Funnel
-                </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">
-                  Conversion through application stages.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={{}} className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={applicationFunnelData} layout="vertical" margin={{ left: 10, right: 10 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                      <XAxis type="number" />
-                      <YAxis dataKey="stage" type="category" width={80} interval={0} fontSize={11} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="count" name="Applications" radius={[0, 4, 4, 0]}>
-                        {applicationFunnelData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-            {/* Portfolio Health Chart */}
-            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <PieChartIcon className="mr-2 h-5 w-5 text-primary" /> Portfolio Health
-                </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">
-                  Distribution of startups by risk assessment.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={{}} className="h-[250px] w-full">
-                  <ResponsiveContainer>
-                    <PieChart>
-                      <Pie
-                        data={portfolioHealthDistribution}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={70}
-                        labelLine={false}
-                        label={({ name, percent }) => `${name.split(" ")[0]}: ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {portfolioHealthDistribution.map((entry) => (
-                          <Cell key={`cell-${entry.name}`} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Legend verticalAlign="bottom" height={36} iconSize={10} wrapperStyle={{ fontSize: "12px" }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
+            <ApplicationFunnelChart data={applicationFunnelData} />
+            <PortfolioHealthChart data={portfolioHealthDistribution} />
           </div>
         </div>
 
-        {/* Sector and Stage Distribution Charts */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-          <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <BarChart3Icon className="mr-2 h-5 w-5 text-primary" /> Sector Distribution
-              </CardTitle>
-              <CardDescription className="text-sm text-muted-foreground">
-                Number of startups per sector.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={{}} className="h-[250px] w-full">
-                <ResponsiveContainer>
-                  <BarChart data={sectorDistribution} layout="vertical" margin={{ left: 10, right: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" width={80} interval={0} fontSize={11} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="value" name="Startups" radius={[0, 4, 4, 0]}>
-                      {sectorDistribution.map((entry) => (
-                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-          <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Briefcase className="mr-2 h-5 w-5 text-primary" /> Stage Distribution
-              </CardTitle>
-              <CardDescription className="text-sm text-muted-foreground">
-                Number of startups per investment stage.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={{}} className="h-[250px] w-full">
-                <ResponsiveContainer>
-                  <BarChart data={stageDistribution} margin={{ left: -10, right: 10, bottom: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" fontSize={11} interval={0} angle={-40} textAnchor="end" height={60} />
-                    <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="value" name="Startups" radius={[4, 4, 0, 0]}>
-                      {stageDistribution.map((entry) => (
-                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+          <SectorDistributionChart data={sectorDistribution} />
+          <StageDistributionChart data={stageDistribution} />
         </div>
 
-        {/* Portfolio Snapshot and Tasks/Activity */}
         <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-2 border hover:shadow-xl transition-shadow duration-300 ease-in-out">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center">
-                  <Building2 className="mr-2 h-5 w-5 text-primary" /> Portfolio Snapshot
-                </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">
-                  Quick overview of recent or key startups.
-                </CardDescription>
-              </div>
-              <Button variant="outline" size="sm" onClick={handleViewAllPortfolio}>
-                <ListFilter className="mr-2 h-4 w-4" /> View All Portfolio
-              </Button>
-            </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Startup</TableHead>
-                    <TableHead>Sector</TableHead>
-                    <TableHead>Stage</TableHead>
-                    <TableHead className="text-right">MRR ({selectedCurrency.code})</TableHead>
-                    <TableHead className="text-center">Health</TableHead>
-                    <TableHead className="text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockPortfoliosSnapshot.slice(0, 4).map((startup) => (
-                    <TableRow key={startup.id} className="hover:bg-muted/50">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={`/placeholder.svg?height=32&width=32&text=${startup.name.substring(0, 1)}`}
-                              alt={startup.name}
-                            />
-                            <AvatarFallback>{startup.name.substring(0, 1)}</AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{startup.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{startup.sector}</Badge>
-                      </TableCell>
-                      <TableCell>{startup.stage}</TableCell>
-                      <TableCell className="text-right text-numerical">{formatCurrency(startup.mrr)}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge
-                          variant={
-                            startup.healthScore > 80 ? "default" : startup.healthScore > 60 ? "outline" : "destructive"
-                          }
-                          className={cn(
-                            startup.healthScore > 80 && "bg-charting-positive text-charting-positive-foreground",
-                            startup.healthScore <= 60 && "bg-charting-negative text-charting-negative-foreground",
-                          )}
-                        >
-                          {startup.healthScore}%
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button variant="ghost" size="sm" onClick={() => handleViewStartup(startup.id)}>
-                          <Eye className="mr-1 h-4 w-4" /> View
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
+          <PortfolioSnapshotTable data={mockPortfoliosSnapshot} onViewAllPortfolio={handleViewAllPortfolio} />
           <div className="space-y-6">
-            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <ClipboardCheck className="mr-2 h-5 w-5 text-primary" /> Your Pending Tasks
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {pendingTasks.length > 0 ? (
-                  <ul className="space-y-2">
-                    {pendingTasks.map((task) => (
-                      <li key={task.id} className="flex items-center justify-between p-2 border rounded-md text-sm">
-                        <div>
-                          <p className="font-medium">{task.title}</p>
-                          <p className="text-xs text-muted-foreground">Due: {task.dueDate}</p>
-                        </div>
-                        <Badge
-                          variant={task.priority === "High" ? "destructive" : "secondary"}
-                          className={cn(
-                            task.priority === "High" && "bg-red-500 text-white dark:bg-red-700 dark:text-red-100",
-                          )}
-                        >
-                          {task.priority}
-                        </Badge>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-muted-foreground text-center py-4 text-sm">No pending tasks.</p>
-                )}
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" size="sm" onClick={handleViewAllTasks}>
-                  View All Tasks
-                </Button>
-              </CardFooter>
-            </Card>
-            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <BellRing className="mr-2 h-5 w-5 text-primary" /> Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 max-h-[150px] overflow-y-auto">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3 text-sm">
-                    <activity.icon className={cn("h-4 w-4 mt-0.5 flex-shrink-0", activity.color)} />
-                    <div>
-                      <p className="font-medium leading-tight">{activity.type}</p>
-                      <p className="text-xs text-muted-foreground leading-tight">{activity.description}</p>
-                      <p className="text-xs text-muted-foreground/70">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            <PendingTasksCard tasks={pendingTasks} onViewAllTasks={handleViewAllTasks} />
+            <RecentActivityCard activity={recentActivity} />
           </div>
         </div>
       </div>

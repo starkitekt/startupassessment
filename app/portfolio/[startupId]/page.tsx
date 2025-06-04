@@ -17,19 +17,24 @@ import {
   Edit,
   FileText,
   Briefcase,
+  ShieldCheck,
+  Zap,
+  Target,
+  Send,
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useGlobalSettings } from "@/contexts/global-settings-context"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { Progress } from "@/components/ui/progress"
 
-// Mock data for a single startup - in a real app, this would be fetched
+// Enhanced mock data for a single startup
 const mockStartupDetails = {
   id: "STP001",
   name: "Innovatech Solutions",
   logoUrl: "/placeholder.svg?height=128&width=128&text=IS",
   sector: "FinTech",
-  stage: "Seed",
+  stage: "Seed", // This could also be "Accelerator Stage 1", etc.
   tagline: "Revolutionizing digital payments with AI.",
   description:
     "Innovatech Solutions is an AI-driven FinTech company focused on providing personalized financial advice and cutting-edge payment solutions. Our platform leverages machine learning to offer users unparalleled insights and seamless transaction experiences. We are committed to democratizing financial tools for the next generation.",
@@ -37,9 +42,9 @@ const mockStartupDetails = {
   foundedDate: "2022-08-01",
   teamSize: 15,
   location: "Bangalore, India",
-  totalFunding: 500000, // Base currency (e.g. USD or INR)
-  mrr: 15000, // Base currency
-  userGrowth: 25, // %
+  totalFunding: 500000,
+  mrr: 15000,
+  userGrowth: 25,
   assignedMentor: "Ananya Sharma",
   mentorId: "M001",
   tags: ["AI", "Payments", "FinTech", "Machine Learning"],
@@ -58,261 +63,24 @@ const mockStartupDetails = {
     { stage: "Pre-Seed", amount: 100000, date: "2022-10-01", investors: "Angel Investor Group" },
     { stage: "Seed", amount: 500000, date: "2024-05-15", investors: "VC Firm Alpha, Beta Ventures" },
   ],
-}
-
-const mockPortfolios = [
-  {
-    id: "STP001",
-    name: "Innovatech Solutions",
-    logoUrl: "/placeholder.svg?height=80&width=80",
-    sector: "FinTech",
-    stage: "Seed",
-    fundingStatus: "Funded",
-    totalFunding: 500000,
-    mrr: 15000,
-    userGrowth: 25,
-    assignedMentor: "Ananya Sharma",
-    lastActivity: "2024-05-15",
-    tags: ["AI", "Payments"],
-    healthScore: 85,
-    tagline: "Revolutionizing digital payments with AI.",
-    description:
-      "Innovatech Solutions is building next-generation payment processing systems using artificial intelligence to enhance security and efficiency. Our platform helps businesses reduce fraud and streamline transactions.",
-    website: "innovatech.com",
-    email: "contact@innovatech.com",
-    phone: "+91 98765 43210",
-    address: "123 Tech Park, Bangalore, India",
-    team: [
-      { name: "Ravi Kumar", role: "CEO & Founder" },
-      { name: "Sunita Patel", role: "CTO" },
-    ],
-    financials: {
-      revenue: [
-        { month: "Jan", value: 12000 },
-        { month: "Feb", value: 14000 },
-        { month: "Mar", value: 15000 },
-      ],
-      burnRate: [
-        { month: "Jan", value: 8000 },
-        { month: "Feb", value: 8500 },
-        { month: "Mar", value: 9000 },
-      ],
-    },
-    assessments: [
-      { id: "ASS001", type: "Initial Screening", status: "Approved", date: "2024-01-10" },
-      { id: "ASS002", type: "Technical Due Diligence", status: "Approved", date: "2024-02-15" },
-    ],
-    mentorship: [
-      { mentor: "Ananya Sharma", date: "2024-03-05", notes: "Discussed GTM strategy." },
-      { mentor: "Ananya Sharma", date: "2024-04-10", notes: "Reviewed pitch deck." },
-    ],
-    documents: [
-      { id: "DOC001", name: "Pitch Deck v2.pdf", type: "pdf", size: "2.5MB", uploaded: "2024-02-01" },
-      { id: "DOC002", name: "Financial Model.xlsx", type: "excel", size: "800KB", uploaded: "2024-01-20" },
-    ],
-    compliance: [
-      { item: "Company Registration", status: "Completed" },
-      { item: "GST Registration", status: "Completed" },
-      { item: "KYC of Directors", status: "Pending" },
-    ],
+  // Accelerator Specific Data
+  acceleratorTrack: "FinTech Scale-Up Program",
+  mouStatus: "Signed & Active", // e.g., "Pending Signature", "Signed & Active", "Expired"
+  currentMilestone: {
+    name: "User Acquisition Target (15k users)",
+    description: "Achieve 15,000 registered and active users on the platform.",
+    dueDate: "2024-08-30",
+    status: "In Progress", // "Pending", "In Progress", "Completed", "Delayed"
+    progress: 70, // Percentage
   },
-  // Add STP002, STP003, etc. with similar detailed structure
-  {
-    id: "STP002",
-    name: "HealthWell AI",
-    logoUrl: "/placeholder.svg?height=80&width=80",
-    sector: "HealthTech",
-    stage: "Series A",
-    fundingStatus: "Seeking",
-    totalFunding: 1200000,
-    mrr: 45000,
-    userGrowth: 18,
-    assignedMentor: "Vikram Singh",
-    lastActivity: "2024-05-20",
-    tags: ["Diagnostics", "ML"],
-    tagline: "AI-powered diagnostics for better healthcare.",
-    description:
-      "HealthWell AI leverages machine learning to provide faster and more accurate medical diagnostics. Our tools assist doctors in making critical decisions, improving patient outcomes.",
-    website: "healthwell.ai",
-    email: "info@healthwell.ai",
-    phone: "+91 91234 56789",
-    address: "456 BioTech Hub, Hyderabad, India",
-    team: [
-      { name: "Dr. Aisha Khan", role: "CEO & Co-founder" },
-      { name: "Ben Thomas", role: "Chief AI Officer" },
-    ],
-    financials: {
-      revenue: [
-        { month: "Jan", value: 30000 },
-        { month: "Feb", value: 40000 },
-        { month: "Mar", value: 45000 },
-      ],
-      burnRate: [
-        { month: "Jan", value: 20000 },
-        { month: "Feb", value: 22000 },
-        { month: "Mar", value: 25000 },
-      ],
-    },
-    assessments: [{ id: "ASS003", type: "Initial Screening", status: "Approved", date: "2024-03-01" }],
-    mentorship: [{ mentor: "Vikram Singh", date: "2024-04-20", notes: "Product roadmap discussion." }],
-    documents: [
-      { id: "DOC003", name: "Clinical Trial Results.pdf", type: "pdf", size: "5.2MB", uploaded: "2024-03-15" },
-    ],
-    compliance: [
-      { item: "Medical Device Approval", status: "Pending" },
-      { item: "Data Privacy Policy", status: "Completed" },
-    ],
+  pastMilestones: [
+    { name: "Beta Platform Launch", status: "Completed", completionDate: "2024-04-28" },
+    { name: "Secure Seed Funding", status: "Completed", completionDate: "2024-05-15" },
+  ],
+  pfmsDetails: {
+    lastReportGenerated: "2024-06-01",
+    nextReportDueDate: "2024-07-01",
   },
-  {
-    id: "STP003",
-    name: "EduSphere Learning",
-    logoUrl: "/placeholder.svg?height=80&width=80",
-    sector: "EdTech",
-    stage: "Pre-Seed",
-    fundingStatus: "Bootstrapped",
-    totalFunding: 50000,
-    mrr: 2000,
-    userGrowth: 35,
-    assignedMentor: "Priya Desai",
-    lastActivity: "2024-05-10",
-    tags: ["K-12", "Gamification", "LMS"],
-    healthScore: 92,
-    tagline: "Interactive learning platforms for K-12.",
-    description:
-      "EduSphere Learning is creating engaging and interactive educational content for students from K-12, leveraging gamification and adaptive learning technologies.",
-    website: "edusphere.com",
-    email: "contact@edusphere.com",
-    phone: "+91 98765 11223",
-    address: "789 Knowledge Park, Pune, India",
-    team: [
-      { name: "Alok Nath", role: "CEO & Founder" },
-      { name: "Meena Kumari", role: "Head of Content" },
-    ],
-    financials: {
-      revenue: [
-        { month: "Jan", value: 1000 },
-        { month: "Feb", value: 1500 },
-        { month: "Mar", value: 2000 },
-      ],
-      burnRate: [
-        { month: "Jan", value: 3000 },
-        { month: "Feb", value: 3200 },
-        { month: "Mar", value: 3500 },
-      ],
-    },
-    assessments: [{ id: "ASS004", type: "Initial Idea Validation", status: "Approved", date: "2024-04-01" }],
-    mentorship: [
-      { mentor: "Priya Desai", date: "2024-05-02", notes: "Discussed content strategy and teacher outreach." },
-    ],
-    documents: [{ id: "DOC004", name: "EduSphere_Pitch_v1.pdf", type: "pdf", size: "1.8MB", uploaded: "2024-03-20" }],
-    compliance: [
-      { item: "Company Registration", status: "Completed" },
-      { item: "Content Copyrights", status: "Pending Review" },
-    ],
-  },
-  {
-    id: "STP004",
-    name: "AgriTech Innovations",
-    logoUrl: "/placeholder.svg?height=80&width=80",
-    sector: "AgriTech",
-    stage: "Seed",
-    fundingStatus: "Seeking",
-    totalFunding: 200000,
-    mrr: 8000,
-    userGrowth: 15,
-    assignedMentor: "Rajesh Khanna",
-    lastActivity: "2024-05-25",
-    tags: ["Precision Farming", "IoT", "Sustainability"],
-    healthScore: 78,
-    tagline: "Sustainable farming solutions powered by IoT.",
-    description:
-      "AgriTech Innovations provides IoT-based solutions for precision farming, helping farmers optimize resource usage and improve crop yields sustainably.",
-    website: "agritechinnovations.com",
-    email: "info@agritechinnovations.com",
-    phone: "+91 99887 76655",
-    address: "101 Agri Park, Nashik, India",
-    team: [
-      { name: "Pooja Sharma", role: "CEO & Founder" },
-      { name: "Vikram Patel", role: "CTO" },
-    ],
-    financials: {
-      revenue: [
-        { month: "Jan", value: 6000 },
-        { month: "Feb", value: 7000 },
-        { month: "Mar", value: 8000 },
-      ],
-      burnRate: [
-        { month: "Jan", value: 4000 },
-        { month: "Feb", value: 4200 },
-        { month: "Mar", value: 4500 },
-      ],
-    },
-    assessments: [{ id: "ASS005", type: "Market Analysis", status: "Approved", date: "2024-04-15" }],
-    mentorship: [{ mentor: "Rajesh Khanna", date: "2024-05-15", notes: "Discussed market entry strategies." }],
-    documents: [
-      { id: "DOC005", name: "AgriTech_Business_Plan.pdf", type: "pdf", size: "2.1MB", uploaded: "2024-04-01" },
-    ],
-    compliance: [
-      { item: "Land Usage Permits", status: "Pending" },
-      { item: "Environmental Compliance", status: "In Progress" },
-    ],
-  },
-  {
-    id: "STP005",
-    name: "FinSecure Technologies",
-    logoUrl: "/placeholder.svg?height=80&width=80",
-    sector: "FinTech",
-    stage: "Series B",
-    fundingStatus: "Funded",
-    totalFunding: 5000000,
-    mrr: 150000,
-    userGrowth: 10,
-    assignedMentor: "Deepika Reddy",
-    lastActivity: "2024-05-28",
-    tags: ["Cybersecurity", "Blockchain", "Finance"],
-    healthScore: 88,
-    tagline: "Securing financial transactions with blockchain.",
-    description:
-      "FinSecure Technologies develops blockchain-based cybersecurity solutions for financial institutions, ensuring secure and transparent transactions.",
-    website: "finsecuretech.com",
-    email: "contact@finsecuretech.com",
-    phone: "+91 97654 32109",
-    address: "222 Cyber City, Mumbai, India",
-    team: [
-      { name: "Suresh Menon", role: "CEO" },
-      { name: "Anita Nair", role: "Head of Engineering" },
-    ],
-    financials: {
-      revenue: [
-        { month: "Jan", value: 130000 },
-        { month: "Feb", value: 140000 },
-        { month: "Mar", value: 150000 },
-      ],
-      burnRate: [
-        { month: "Jan", value: 70000 },
-        { month: "Feb", value: 75000 },
-        { month: "Mar", value: 80000 },
-      ],
-    },
-    assessments: [{ id: "ASS006", type: "Security Audit", status: "Approved", date: "2024-05-01" }],
-    mentorship: [
-      {
-        mentor: "Deepika Reddy",
-        date: "2024-05-20",
-        notes: "Discussed scaling strategies and international expansion.",
-      },
-    ],
-    documents: [{ id: "DOC006", name: "FinSecure_Whitepaper.pdf", type: "pdf", size: "3.5MB", uploaded: "2024-04-15" }],
-    compliance: [
-      { item: "Data Security Standards", status: "Completed" },
-      { item: "Regulatory Compliance", status: "Completed" },
-    ],
-  },
-]
-
-const chartConfig = {
-  revenue: { label: "Revenue (USD)", color: "hsl(var(--chart-positive))" },
-  burnRate: { label: "Burn Rate (USD)", color: "hsl(var(--chart-negative))" },
 }
 
 export default function StartupDetailPage() {
@@ -322,15 +90,11 @@ export default function StartupDetailPage() {
   const { formatCurrency, selectedCurrency, selectedCountry } = useGlobalSettings()
   const startupId = params.startupId as string
 
-  const [startup, setStartup] = useState(mockStartupDetails) // In real app, fetch by ID
+  const [startup, setStartup] = useState(mockStartupDetails)
 
-  // Simulate fetching data
   useEffect(() => {
     if (startupId) {
-      // Replace with actual fetch logic
-      // For now, just update the ID in the mock data if it's different
       const fetchedStartup = { ...mockStartupDetails, id: startupId, name: `Startup ${startupId.slice(-3)}` }
-      // A more robust mock would be to have an array of startups and find by ID
       setStartup(fetchedStartup)
     }
   }, [startupId])
@@ -339,20 +103,24 @@ export default function StartupDetailPage() {
     return <div className="p-6 text-center">Loading startup details...</div>
   }
 
-  const handleEditStartup = () => {
-    router.push(`/portfolio/${startup.id}/edit`)
-  }
-
-  const handleViewAssessments = () => {
-    router.push(`/assessments?startupId=${startup.id}&startupName=${startup.name}`)
-  }
-
+  const handleEditStartup = () => router.push(`/portfolio/${startup.id}/edit`)
+  const handleViewAssessments = () => router.push(`/assessments?startupId=${startup.id}&startupName=${startup.name}`)
   const handleViewMentor = () => {
-    if (startup.mentorId) {
-      router.push(`/mentors/${startup.mentorId}`)
-    } else {
-      toast({ title: "No mentor assigned or ID missing.", variant: "destructive" })
-    }
+    if (startup.mentorId) router.push(`/mentors/${startup.mentorId}`)
+    else toast({ title: "No mentor assigned or ID missing.", variant: "destructive" })
+  }
+  const handleViewAudits = () => router.push(`/audits?startupId=${startup.id}&startupName=${startup.name}`)
+  const handleGeneratePFMS = () => {
+    toast({
+      title: "PFMS Report Generation (Simulated)",
+      description: `A PFMS report for ${startup.name} would be generated and processed.`,
+    })
+  }
+  const handleSubmitMilestoneUpdate = () => {
+    toast({
+      title: "Milestone Update (Simulated)",
+      description: `A modal to update progress for "${startup.currentMilestone.name}" would appear.`,
+    })
   }
 
   return (
@@ -420,21 +188,31 @@ export default function StartupDetailPage() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>View all assessments related to {startup.name}.</p>
+                    <p>View all assessments for {startup.name}.</p>
                   </TooltipContent>
                 </Tooltip>
                 {startup.assignedMentor && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="outline" size="sm" onClick={handleViewMentor}>
-                        <Users className="mr-2 h-4 w-4" /> View Mentor Profile
+                        <Users className="mr-2 h-4 w-4" /> View Mentor
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>View profile of assigned mentor: {startup.assignedMentor}.</p>
+                      <p>View mentor: {startup.assignedMentor}.</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" onClick={handleViewAudits}>
+                      <ShieldCheck className="mr-2 h-4 w-4" /> View Audits
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>View audit history for {startup.name}.</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </div>
           </CardHeader>
@@ -482,29 +260,81 @@ export default function StartupDetailPage() {
                     <span className="font-semibold">Total Funding:</span> {formatCurrency(startup.totalFunding)}
                   </p>
                   <p>
-                    <span className="font-semibold">Monthly Recurring Revenue (MRR):</span>{" "}
-                    {formatCurrency(startup.mrr)}
+                    <span className="font-semibold">MRR:</span> {formatCurrency(startup.mrr)}
                   </p>
                   <p>
                     <span className="font-semibold">User Growth (MoM):</span> {startup.userGrowth}%
                   </p>
                 </CardContent>
               </Card>
+              {/* Accelerator Program Details Card */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-xl flex items-center">
-                    <Users className="mr-2 h-5 w-5 text-primary" />
-                    Mentorship
+                    <Zap className="mr-2 h-5 w-5 text-primary" />
+                    Accelerator Program
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <p>
-                    <span className="font-semibold">Assigned Mentor:</span> {startup.assignedMentor || "N/A"}
+                    <span className="font-semibold">Track:</span> {startup.acceleratorTrack}
                   </p>
-                  {/* Add more mentorship details if available */}
+                  <p>
+                    <span className="font-semibold">MoU Status:</span>{" "}
+                    <Badge
+                      variant={startup.mouStatus === "Signed & Active" ? "default" : "outline"}
+                      className={cn(startup.mouStatus === "Signed & Active" && "bg-green-100 text-green-700")}
+                    >
+                      {startup.mouStatus}
+                    </Badge>
+                  </p>
+                  <p>
+                    <span className="font-semibold">PFMS Due:</span>{" "}
+                    {startup.pfmsDetails.nextReportDueDate
+                      ? new Date(startup.pfmsDetails.nextReportDueDate).toLocaleDateString()
+                      : "N/A"}
+                  </p>
+                  <Button size="sm" variant="outline" className="w-full mt-2" onClick={handleGeneratePFMS}>
+                    <Send className="mr-2 h-4 w-4" /> Generate PFMS Report (Sim.)
+                  </Button>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Current Milestone Card */}
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-xl flex items-center">
+                    <Target className="mr-2 h-5 w-5 text-primary" />
+                    Current Milestone
+                  </CardTitle>
+                  <Button variant="outline" size="sm" onClick={handleSubmitMilestoneUpdate}>
+                    Update Progress
+                  </Button>
+                </div>
+                <CardDescription>
+                  {startup.currentMilestone.name} - Due:{" "}
+                  {new Date(startup.currentMilestone.dueDate).toLocaleDateString()}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-2">{startup.currentMilestone.description}</p>
+                <div className="flex items-center gap-2">
+                  <Progress value={startup.currentMilestone.progress} className="w-full" />
+                  <span className="text-sm font-medium">{startup.currentMilestone.progress}%</span>
+                </div>
+                <Badge
+                  variant={startup.currentMilestone.status === "Completed" ? "default" : "outline"}
+                  className={cn(
+                    "mt-2",
+                    startup.currentMilestone.status === "In Progress" && "bg-blue-100 text-blue-700",
+                  )}
+                >
+                  {startup.currentMilestone.status}
+                </Badge>
+              </CardContent>
+            </Card>
 
             <div>
               <h3 className="text-xl font-semibold mb-2">About {startup.name}</h3>
@@ -558,19 +388,36 @@ export default function StartupDetailPage() {
               </div>
             </div>
 
-            <div>
-              <h3 className="text-xl font-semibold mb-2 flex items-center">
-                <CalendarDays className="mr-2 h-5 w-5 text-primary" />
-                Recent Activities
-              </h3>
-              <ul className="space-y-2 list-disc list-inside text-sm text-muted-foreground">
-                {startup.recentActivities.map((activity) => (
-                  <li key={activity.date}>
-                    <span className="font-semibold">{new Date(activity.date).toLocaleDateString()}:</span>{" "}
-                    {activity.activity}
-                  </li>
-                ))}
-              </ul>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-xl font-semibold mb-2 flex items-center">
+                  <Target className="mr-2 h-5 w-5 text-primary" />
+                  Past Milestones
+                </h3>
+                <ul className="space-y-2 list-disc list-inside text-sm text-muted-foreground">
+                  {startup.pastMilestones.map((milestone, index) => (
+                    <li key={index}>
+                      <span className="font-semibold">{milestone.name}:</span> {milestone.status}
+                      {milestone.completionDate &&
+                        ` (Completed: ${new Date(milestone.completionDate).toLocaleDateString()})`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2 flex items-center">
+                  <CalendarDays className="mr-2 h-5 w-5 text-primary" />
+                  Recent Activities
+                </h3>
+                <ul className="space-y-2 list-disc list-inside text-sm text-muted-foreground">
+                  {startup.recentActivities.map((activity) => (
+                    <li key={activity.date}>
+                      <span className="font-semibold">{new Date(activity.date).toLocaleDateString()}:</span>{" "}
+                      {activity.activity}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </CardContent>
         </Card>

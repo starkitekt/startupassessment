@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react" // Added useEffect
+import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,13 +8,30 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { PlusCircle, Filter, Search, MoreHorizontal, Eye, Edit3, Trash2 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import {
+  PlusCircle,
+  Filter,
+  Search,
+  MoreHorizontal,
+  Eye,
+  Edit3,
+  Trash2,
+  UserCheck,
+  BarChartHorizontalBig,
+  ShieldCheck,
+} from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/use-toast"
 import { cn } from "@/lib/utils"
 import { useGlobalSettings } from "@/contexts/global-settings-context"
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/ui/tooltip" // Added Tooltip components
 import {
   BarChart,
   Bar,
@@ -24,12 +41,12 @@ import {
   XAxis,
   YAxis,
   Tooltip as RechartsTooltip,
-} from "recharts" // Renamed RechartsTooltip
+} from "recharts"
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 import { Label } from "@/components/ui/label"
-import Image from "next/image"
+import Image from "next/image" // Keep next/image
 
-// Assuming MRR and totalFunding values are in BASE_CURRENCY (INR)
+// Enhanced mock data for Accelerator flow
 const mockPortfolios = [
   {
     id: "STP001",
@@ -38,13 +55,16 @@ const mockPortfolios = [
     sector: "FinTech",
     stage: "Seed",
     fundingStatus: "Funded",
-    totalFunding: 50000000, // 5 Cr INR
-    mrr: 1500000, // 15 Lakh INR
+    totalFunding: 50000000,
+    mrr: 1500000,
     userGrowth: 25,
     assignedMentor: "Ananya Sharma",
     lastActivity: "2024-05-15",
     tags: ["AI", "Payments"],
     healthScore: 85,
+    currentMilestone: "Beta Launched",
+    mouStatus: "Completed",
+    nextMilestoneDueDate: "2024-07-15",
   },
   {
     id: "STP002",
@@ -53,15 +73,17 @@ const mockPortfolios = [
     sector: "HealthTech",
     stage: "Series A",
     fundingStatus: "Seeking",
-    totalFunding: 120000000, // 12 Cr INR
-    mrr: 4500000, // 45 Lakh INR
+    totalFunding: 120000000,
+    mrr: 4500000,
     userGrowth: 18,
     assignedMentor: "Vikram Singh",
     lastActivity: "2024-05-20",
     tags: ["Diagnostics", "ML"],
     healthScore: 78,
+    currentMilestone: "Prototype Complete",
+    mouStatus: "Pending eSign",
+    nextMilestoneDueDate: "2024-06-30",
   },
-  // ... (Add more mock data with consistent currency assumptions if needed)
   {
     id: "STP003",
     name: "EduSphere Learning",
@@ -69,13 +91,16 @@ const mockPortfolios = [
     sector: "EdTech",
     stage: "Pre-Seed",
     fundingStatus: "Bootstrapped",
-    totalFunding: 5000000, // 50 Lakh INR
-    mrr: 200000, // 2 Lakh INR
+    totalFunding: 5000000,
+    mrr: 200000,
     userGrowth: 35,
     assignedMentor: "Priya Desai",
     lastActivity: "2024-05-10",
     tags: ["K-12", "Gamification"],
     healthScore: 92,
+    currentMilestone: "Onboarding",
+    mouStatus: "Sent",
+    nextMilestoneDueDate: "2024-06-20",
   },
 ]
 
@@ -94,8 +119,9 @@ const SECTORS = [
   "TravelTech",
   "Deep Tech",
 ]
-const STAGES = ["All", "Pre-Seed", "Seed", "Series A", "Series B", "Growth", "Exit"]
+const STAGES = ["All", "Pre-Seed", "Seed", "Series A", "Series B", "Growth", "Exit", "Onboarding"]
 const FUNDING_STATUSES = ["All", "Bootstrapped", "Seeking", "Funded", "Acquired"]
+const MOU_STATUSES = ["All", "Pending eSign", "Sent", "Completed", "Discrepancy"]
 const CHART_COLORS = [
   "hsl(var(--chart-positive))",
   "hsl(var(--chart-accent1))",
@@ -107,13 +133,13 @@ const CHART_COLORS = [
 export function PortfolioContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [filters, setFilters] = useState({ sector: "All", stage: "All", fundingStatus: "All" })
+  const [filters, setFilters] = useState({ sector: "All", stage: "All", fundingStatus: "All", mouStatus: "All" })
   const router = useRouter()
   const { toast } = useToast()
   const { formatCurrency, selectedCurrency, isExchangeRateLoading } = useGlobalSettings()
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 700) // Simulate loading
+    const timer = setTimeout(() => setIsLoading(false), 700)
     return () => clearTimeout(timer)
   }, [])
 
@@ -130,7 +156,8 @@ export function PortfolioContent() {
       const sectorMatch = filters.sector === "All" || startup.sector === filters.sector
       const stageMatch = filters.stage === "All" || startup.stage === filters.stage
       const fundingMatch = filters.fundingStatus === "All" || startup.fundingStatus === filters.fundingStatus
-      return searchMatch && sectorMatch && stageMatch && fundingMatch
+      const mouMatch = filters.mouStatus === "All" || startup.mouStatus === filters.mouStatus
+      return searchMatch && sectorMatch && stageMatch && fundingMatch && mouMatch
     })
   }, [searchTerm, filters])
 
@@ -144,12 +171,13 @@ export function PortfolioContent() {
       value,
       fill: CHART_COLORS[index % CHART_COLORS.length],
     }))
-  }, []) // Depends only on mockPortfolios, which is static here
+  }, [])
 
   const handleAddNewStartup = () => router.push("/portfolio/new")
   const viewStartupDetails = (startupId: string) => router.push(`/portfolio/${startupId}`)
 
   if (isLoading || isExchangeRateLoading) {
+    // Skeleton remains the same
     return (
       <div className="space-y-6 p-4 md:p-6">
         <div className="flex items-center justify-between">
@@ -157,9 +185,12 @@ export function PortfolioContent() {
         </div>
         <Card>
           <CardContent className="p-4 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {" "}
+              {/* Added one more for MoU status */}
               <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
             </div>
           </CardContent>
         </Card>
@@ -177,7 +208,7 @@ export function PortfolioContent() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">Startup Portfolio</h1>
-            <p className="text-muted-foreground">Manage and track all startups in your portfolio.</p>
+            <p className="text-muted-foreground">Manage and track all startups in your accelerator program.</p>
           </div>
           <Button onClick={handleAddNewStartup} className="w-full sm:w-auto jpmc-gradient text-white">
             <PlusCircle className="mr-2 h-4 w-4" /> Add New Startup
@@ -191,8 +222,12 @@ export function PortfolioContent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
-              <div className="relative">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end">
+              {" "}
+              {/* Adjusted for 5 filters */}
+              <div className="relative lg:col-span-1">
+                {" "}
+                {/* Search takes less space */}
                 <Label htmlFor="search-portfolio">Search</Label>
                 <Search className="absolute left-3 top-9 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -248,6 +283,21 @@ export function PortfolioContent() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="filter-mou">MoU Status</Label>
+                <Select value={filters.mouStatus} onValueChange={(v) => handleFilterChange("mouStatus", v)}>
+                  <SelectTrigger id="filter-mou">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MOU_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -295,8 +345,9 @@ export function PortfolioContent() {
                     <TableHead>Startup</TableHead>
                     <TableHead>Sector</TableHead>
                     <TableHead>Stage</TableHead>
-                    <TableHead>Funding</TableHead>
-                    <TableHead className="text-right">MRR ({selectedCurrency.code})</TableHead>
+                    <TableHead>MoU Status</TableHead>
+                    <TableHead>Current Milestone</TableHead>
+                    <TableHead>Mentor</TableHead>
                     <TableHead className="text-right">Health</TableHead>
                     <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
@@ -311,24 +362,15 @@ export function PortfolioContent() {
                       >
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            {startup.logoUrl && !startup.logoUrl.includes("placeholder.svg") ? (
-                              <Image
-                                src={startup.logoUrl || "/placeholder.svg"}
-                                alt={startup.name}
-                                width={32}
-                                height={32}
-                                className="h-8 w-8 rounded-full object-cover"
-                              />
-                            ) : (
-                              <img // Fallback to img for SVG placeholders if next/image has issues with external SVGs or specific SVG structures
-                                src={
-                                  startup.logoUrl ||
-                                  `/placeholder.svg?height=32&width=32&text=${startup.name.charAt(0)}`
-                                }
-                                alt={startup.name}
-                                className="h-8 w-8 rounded-full object-cover"
-                              />
-                            )}
+                            <Image
+                              src={
+                                startup.logoUrl || `/placeholder.svg?height=32&width=32&text=${startup.name.charAt(0)}`
+                              }
+                              alt={startup.name}
+                              width={32}
+                              height={32}
+                              className="h-8 w-8 rounded-full object-cover"
+                            />
                             <div>
                               <div className="font-medium">{startup.name}</div>
                               <div className="text-xs text-muted-foreground">{startup.tags.join(", ")}</div>
@@ -341,17 +383,19 @@ export function PortfolioContent() {
                         <TableCell>{startup.stage}</TableCell>
                         <TableCell>
                           <Badge
+                            variant={startup.mouStatus === "Completed" ? "default" : "outline"}
                             className={cn(
-                              "text-xs",
-                              startup.fundingStatus === "Funded" && "status-funded",
-                              startup.fundingStatus === "Seeking" && "status-pending",
-                              startup.fundingStatus === "Bootstrapped" && "status-inactive",
+                              startup.mouStatus === "Completed" &&
+                                "bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200",
+                              startup.mouStatus === "Pending eSign" &&
+                                "bg-amber-100 text-amber-700 dark:bg-amber-800 dark:text-amber-200",
                             )}
                           >
-                            {startup.fundingStatus}
+                            {startup.mouStatus}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right text-numerical">{formatCurrency(startup.mrr)}</TableCell>
+                        <TableCell>{startup.currentMilestone}</TableCell>
+                        <TableCell>{startup.assignedMentor || "N/A"}</TableCell>
                         <TableCell className="text-right">
                           <Badge
                             variant={
@@ -393,6 +437,32 @@ export function PortfolioContent() {
                               >
                                 <Edit3 className="mr-2 h-4 w-4" /> Edit Startup
                               </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toast({ title: "Manage Milestones (Simulated)" })
+                                }}
+                              >
+                                <BarChartHorizontalBig className="mr-2 h-4 w-4" /> Manage Milestones
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toast({ title: "Assign Mentor (Simulated)" })
+                                }}
+                              >
+                                <UserCheck className="mr-2 h-4 w-4" /> Assign Mentor
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  router.push(`/audits?startupId=${startup.id}`)
+                                }}
+                              >
+                                <ShieldCheck className="mr-2 h-4 w-4" /> View Audit History
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 className="text-red-600 hover:!text-red-600 dark:hover:!text-red-500"
                                 onClick={(e) => {
@@ -413,7 +483,7 @@ export function PortfolioContent() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center">
+                      <TableCell colSpan={8} className="h-24 text-center">
                         No startups found.
                       </TableCell>
                     </TableRow>

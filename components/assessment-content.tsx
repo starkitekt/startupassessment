@@ -199,7 +199,7 @@ export function AssessmentContent() {
         <Card>
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center text-lg font-semibold">
-              <Filter className="mr-2 h-5 w-5 text-jpmc-blue" /> Filters
+              <Filter className="mr-2 h-5 w-5 text-primary" /> Filters
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -329,10 +329,14 @@ export function AssessmentContent() {
                                 : "outline"
                           }
                           className={cn(
-                            assessment.status === "approved" && "bg-charting-positive text-white",
-                            assessment.status === "rejected" && "bg-charting-negative text-white",
-                            assessment.status === "under-review" && "border-blue-500 text-blue-500",
-                            assessment.status === "pending-docs" && "border-amber-500 text-amber-500",
+                            assessment.status === "approved" &&
+                              "bg-charting-positive text-charting-positive-foreground",
+                            assessment.status === "rejected" &&
+                              "bg-charting-negative text-charting-negative-foreground",
+                            assessment.status === "under-review" &&
+                              "border-blue-500 text-blue-500 dark:border-blue-400 dark:text-blue-400",
+                            assessment.status === "pending-docs" &&
+                              "border-amber-500 text-amber-500 dark:border-amber-400 dark:text-amber-400",
                           )}
                         >
                           {assessment.status.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())}

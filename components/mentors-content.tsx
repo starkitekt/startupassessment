@@ -288,7 +288,9 @@ export function MentorsContent() {
                         }
                         className={cn(
                           "text-xs cursor-pointer",
-                          mentor.availability === "Available" ? "bg-charting-positive text-white" : "",
+                          mentor.availability === "Available"
+                            ? "bg-charting-positive text-charting-positive-foreground"
+                            : "",
                         )}
                       >
                         {mentor.availability}
