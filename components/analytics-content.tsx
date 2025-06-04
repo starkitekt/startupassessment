@@ -1,13 +1,12 @@
 "use client"
 
 import { Label } from "@/components/ui/label"
-
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react" // Added useEffect
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 import {
   BarChart,
   Bar,
@@ -22,6 +21,7 @@ import {
   ScatterChart,
   Scatter,
   ZAxis,
+  Tooltip as RechartsTooltip,
 } from "recharts"
 import { TrendingUp, Filter, SlidersHorizontal, Briefcase, Target } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -29,14 +29,26 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { useGlobalSettings } from "@/contexts/global-settings-context"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToast } from "@/components/ui/use-toast"
+import {
+  CHART_PALETTE,
+  commonGridProps,
+  commonXAxisProps,
+  commonYAxisProps,
+  commonLegendProps,
+  commonLineStyle,
+  commonBarStyle,
+  getCurrencyTooltipFormatter,
+  DYNAMIC_CHART_COLORS, // If needed for charts with dynamic series colors
+} from "@/lib/chart-utils"
 
-// Mock Data
+// Updated Mock Data with new color var names
 const portfolioHealthData = [
-  { risk: "Low", count: 45, avgValuation: 2.5, color: "var(--color-green)" },
-  { risk: "Medium", count: 30, avgValuation: 1.8, color: "var(--color-amber)" },
-  { risk: "High", count: 15, avgValuation: 0.9, color: "var(--color-red)" },
+  { risk: "Low", count: 45, avgValuation: 2.5, color: CHART_PALETTE.positive },
+  { risk: "Medium", count: 30, avgValuation: 1.8, color: CHART_PALETTE.warning },
+  { risk: "High", count: 15, avgValuation: 0.9, color: CHART_PALETTE.negative },
 ]
 const funnelData = [
+  // Colors defined directly in Bar component for funnel
   { stage: "Submitted", count: 500, conversion: 100 },
   { stage: "Screened", count: 350, conversion: 70 },
   { stage: "Assessed", count: 150, conversion: 42.8 },
@@ -44,7 +56,7 @@ const funnelData = [
   { stage: "Funded", count: 60, conversion: 80 },
 ]
 const impactData = [
-  { year: 2021, jobsCreated: 1200, revenueGenerated: 15 }, // revenue in Cr
+  { year: 2021, jobsCreated: 1200, revenueGenerated: 15 },
   { year: 2022, jobsCreated: 1800, revenueGenerated: 25 },
   { year: 2023, jobsCreated: 2500, revenueGenerated: 40 },
   { year: 2024, jobsCreated: 3100, revenueGenerated: 55 },
@@ -63,22 +75,30 @@ export function AnalyticsContent() {
   const { formatCurrency, selectedCurrency } = useGlobalSettings()
   const { toast } = useToast()
 
-  const analyticsChartConfig = {
-    count: { label: "Count", color: "hsl(var(--chart-1))" },
-    avgValuation: { label: `Avg Valuation (${selectedCurrency.code} Cr)`, color: "hsl(var(--chart-2))" },
-    jobsCreated: { label: "Jobs Created", color: "hsl(var(--chart-1))" },
-    revenueGenerated: { label: `Revenue (${selectedCurrency.code} Cr)`, color: "hsl(var(--chart-2))" },
-  }
+  // Updated chartConfig to use new CSS variables
+  const analyticsChartConfig = useMemo(
+    () => ({
+      count: { label: "Count", color: CHART_PALETTE.primary },
+      avgValuation: { label: `Avg Valuation (${selectedCurrency.code} Cr)`, color: CHART_PALETTE.secondary },
+      jobsCreated: { label: "Jobs Created", color: CHART_PALETTE.primary },
+      revenueGenerated: { label: `Revenue (${selectedCurrency.code} Cr)`, color: CHART_PALETTE.secondary },
+    }),
+    [selectedCurrency.code],
+  )
 
-  const keyMetricsChartConfig = {
-    applications: { label: "Applications Received", color: "hsl(var(--chart-1))" },
-    funded: { label: "Startups Funded", color: "hsl(var(--chart-2))" },
-  }
+  const keyMetricsChartConfig = useMemo(
+    () => ({
+      applications: { label: "Applications Received", color: CHART_PALETTE.primary },
+      funded: { label: "Startups Funded", color: CHART_PALETTE.secondary },
+    }),
+    [],
+  )
 
-  useState(() => {
+  useEffect(() => {
+    // Changed from useState to useEffect for side effect
     const timer = setTimeout(() => setIsLoading(false), 1800)
     return () => clearTimeout(timer)
-  })
+  }, [])
 
   const handleCustomizeDashboard = () => {
     toast({
@@ -191,15 +211,22 @@ export function AnalyticsContent() {
                 </CardHeader>
                 <CardContent>
                   <ChartContainer config={analyticsChartConfig} className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={portfolioHealthData} layout="vertical" margin={{ right: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                        <XAxis type="number" dataKey="count" />
-                        <YAxis type="category" dataKey="risk" width={60} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                    <ResponsiveContainer>
+                      <BarChart
+                        data={portfolioHealthData}
+                        layout="vertical"
+                        margin={{ right: 20, left: 10, top: 5, bottom: 5 }}
+                      >
+                        <CartesianGrid {...commonGridProps} horizontal={false} />
+                        <XAxis type="number" dataKey="count" {...commonXAxisProps} />
+                        <YAxis type="category" dataKey="risk" {...commonYAxisProps(60)} />
+                        <RechartsTooltip
+                          cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
+                          content={<ChartTooltipContent />}
+                        />
+                        <Bar dataKey="count" {...commonBarStyle}>
                           {portfolioHealthData.map((entry) => (
-                            <Cell key={`cell-${entry.risk}`} fill={entry.color} />
+                            <Cell key={`cell-risk-${entry.risk}`} fill={entry.color} />
                           ))}
                         </Bar>
                       </BarChart>
@@ -214,34 +241,40 @@ export function AnalyticsContent() {
                 </CardHeader>
                 <CardContent>
                   <ChartContainer config={analyticsChartConfig} className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                        <CartesianGrid />
+                    <ResponsiveContainer>
+                      <ScatterChart margin={{ top: 20, right: 30, bottom: 10, left: 10 }}>
+                        <CartesianGrid {...commonGridProps} />
                         <XAxis
                           type="number"
                           dataKey="avgValuation"
                           name={`Avg Valuation (${selectedCurrency.code} Cr)`}
                           unit="Cr"
-                          tickFormatter={(value) => formatCurrency(value * 10000000, selectedCurrency.code, 0)}
+                          tickFormatter={(value) =>
+                            formatCurrency(value * 10000000, selectedCurrency.code, {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 1,
+                            })
+                          }
+                          {...commonXAxisProps}
                         />
-                        <YAxis type="category" dataKey="risk" name="Risk Category" />
-                        <ZAxis type="number" dataKey="count" range={[100, 500]} name="Number of Startups" />
-                        <ChartTooltip
+                        <YAxis type="category" dataKey="risk" name="Risk Category" {...commonYAxisProps(70)} />
+                        <ZAxis type="number" dataKey="count" range={[100, 400]} name="Number of Startups" />
+                        <RechartsTooltip
                           cursor={{ strokeDasharray: "3 3" }}
                           content={
                             <ChartTooltipContent
-                              formatter={(value, name) =>
-                                name === `Avg Valuation (${selectedCurrency.code} Cr)`
-                                  ? formatCurrency(Number(value) * 10000000)
-                                  : value
-                              }
+                              formatter={getCurrencyTooltipFormatter(
+                                { formatCurrency, selectedCurrency },
+                                false,
+                                10000000,
+                              )} // value is in Cr
                             />
                           }
                         />
-                        <Legend />
-                        <Scatter name="Portfolio Distribution" data={portfolioHealthData}>
+                        <Legend {...commonLegendProps} />
+                        <Scatter name="Portfolio Distribution" data={portfolioHealthData} fill={CHART_PALETTE.primary}>
                           {portfolioHealthData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                            <Cell key={`cell-scatter-${index}`} fill={entry.color} />
                           ))}
                         </Scatter>
                       </ScatterChart>
@@ -269,19 +302,21 @@ export function AnalyticsContent() {
               </CardHeader>
               <CardContent>
                 <ChartContainer config={analyticsChartConfig} className="h-[350px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={funnelData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="stage" />
-                      <YAxis dataKey="count" />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Legend />
-                      <Bar
-                        dataKey="count"
-                        name="Applications at Stage"
-                        fill="var(--color-count)"
-                        radius={[4, 4, 0, 0]}
-                      />
+                  <ResponsiveContainer>
+                    <BarChart data={funnelData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                      <CartesianGrid {...commonGridProps} vertical={false} />
+                      <XAxis dataKey="stage" {...commonXAxisProps} />
+                      <YAxis dataKey="count" {...commonYAxisProps(50)} />
+                      <RechartsTooltip cursor={{ fill: "hsl(var(--muted) / 0.3)" }} content={<ChartTooltipContent />} />
+                      <Legend {...commonLegendProps} />
+                      <Bar dataKey="count" name="Applications at Stage" {...commonBarStyle}>
+                        {funnelData.map((entry, index) => (
+                          <Cell
+                            key={`cell-funnel-analytics-${index}`}
+                            fill={DYNAMIC_CHART_COLORS[index % DYNAMIC_CHART_COLORS.length]}
+                          />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartContainer>
@@ -298,19 +333,19 @@ export function AnalyticsContent() {
                 </CardHeader>
                 <CardContent>
                   <ChartContainer config={analyticsChartConfig} className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={impactData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="year" />
-                        <YAxis dataKey="jobsCreated" />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Legend />
+                    <ResponsiveContainer>
+                      <LineChart data={impactData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                        <CartesianGrid {...commonGridProps} />
+                        <XAxis dataKey="year" {...commonXAxisProps} />
+                        <YAxis dataKey="jobsCreated" {...commonYAxisProps(60)} />
+                        <RechartsTooltip cursor={{ strokeDasharray: "3 3" }} content={<ChartTooltipContent />} />
+                        <Legend {...commonLegendProps} />
                         <Line
                           type="monotone"
                           dataKey="jobsCreated"
                           name={analyticsChartConfig.jobsCreated.label}
-                          stroke="var(--color-jobsCreated)"
-                          strokeWidth={2}
+                          stroke={analyticsChartConfig.jobsCreated.color}
+                          {...commonLineStyle}
                         />
                       </LineChart>
                     </ResponsiveContainer>
@@ -326,32 +361,36 @@ export function AnalyticsContent() {
                 </CardHeader>
                 <CardContent>
                   <ChartContainer config={analyticsChartConfig} className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={impactData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="year" />
+                    <ResponsiveContainer>
+                      <BarChart data={impactData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                        <CartesianGrid {...commonGridProps} vertical={false} />
+                        <XAxis dataKey="year" {...commonXAxisProps} />
                         <YAxis
                           dataKey="revenueGenerated"
                           unit="Cr"
-                          tickFormatter={(value) => formatCurrency(value * 10000000, selectedCurrency.code, 0)}
+                          tickFormatter={(value) =>
+                            formatCurrency(value * 10000000, selectedCurrency.code, { minimumFractionDigits: 0 })
+                          }
+                          {...commonYAxisProps(60)}
                         />
-                        <ChartTooltip
+                        <RechartsTooltip
+                          cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
                           content={
                             <ChartTooltipContent
-                              formatter={(value, name) =>
-                                name === analyticsChartConfig.revenueGenerated.label
-                                  ? formatCurrency(Number(value) * 10000000)
-                                  : value
-                              }
+                              formatter={getCurrencyTooltipFormatter(
+                                { formatCurrency, selectedCurrency },
+                                false,
+                                10000000,
+                              )}
                             />
                           }
                         />
-                        <Legend />
+                        <Legend {...commonLegendProps} />
                         <Bar
                           dataKey="revenueGenerated"
                           name={analyticsChartConfig.revenueGenerated.label}
-                          fill="var(--color-revenueGenerated)"
-                          radius={[4, 4, 0, 0]}
+                          fill={analyticsChartConfig.revenueGenerated.color}
+                          {...commonBarStyle}
                         />
                       </BarChart>
                     </ResponsiveContainer>
@@ -361,7 +400,7 @@ export function AnalyticsContent() {
             </div>
           </TabsContent>
         </Tabs>
-        <Card className="col-span-full md:col-span-2 lg:col-span-3">
+        <Card className="col-span-full">
           <CardHeader>
             <CardTitle>Key Metrics Over Time</CardTitle>
             <CardDescription>Trends in applications and funding.</CardDescription>
@@ -369,28 +408,28 @@ export function AnalyticsContent() {
           <CardContent>
             <ChartContainer config={keyMetricsChartConfig} className="h-[300px] w-full">
               <ResponsiveContainer>
-                <LineChart data={keyMetricsOverTimeData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="period" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis yAxisId="left" orientation="left" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis yAxisId="right" orientation="right" tickLine={false} axisLine={false} fontSize={12} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend />
+                <LineChart data={keyMetricsOverTimeData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  <CartesianGrid {...commonGridProps} vertical={false} />
+                  <XAxis dataKey="period" {...commonXAxisProps} />
+                  <YAxis yAxisId="left" orientation="left" {...commonYAxisProps(50)} />
+                  <YAxis yAxisId="right" orientation="right" {...commonYAxisProps(50)} />
+                  <RechartsTooltip cursor={{ strokeDasharray: "3 3" }} content={<ChartTooltipContent />} />
+                  <Legend {...commonLegendProps} />
                   <Line
                     yAxisId="left"
                     type="monotone"
                     dataKey="applications"
-                    stroke="var(--color-applications)"
-                    strokeWidth={2}
+                    stroke={keyMetricsChartConfig.applications.color}
                     name="Applications"
+                    {...commonLineStyle}
                   />
                   <Line
                     yAxisId="right"
                     type="monotone"
                     dataKey="funded"
-                    stroke="var(--color-funded)"
-                    strokeWidth={2}
+                    stroke={keyMetricsChartConfig.funded.color}
                     name="Funded"
+                    {...commonLineStyle}
                   />
                 </LineChart>
               </ResponsiveContainer>

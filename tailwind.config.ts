@@ -69,14 +69,38 @@ const config: Config = {
         },
         // Chart-specific color palette
         charting: {
-          primary: "hsl(var(--chart-primary))",
-          secondary: "hsl(var(--chart-secondary))",
-          accent1: "hsl(var(--chart-accent1))",
-          accent2: "hsl(var(--chart-accent2))",
-          accent3: "hsl(var(--chart-accent3))",
+          // For McKinsey-style, professional charts
+          blue: {
+            deep: "hsl(var(--chart-blue-deep))",
+            primary: "hsl(var(--chart-blue-primary))",
+            secondary: "hsl(var(--chart-blue-secondary))",
+            tertiary: "hsl(var(--chart-blue-tertiary))",
+          },
+          gray: {
+            dark: "hsl(var(--chart-gray-dark))",
+            medium: "hsl(var(--chart-gray-medium))",
+            light: "hsl(var(--chart-gray-light))",
+            extralight: "hsl(var(--chart-gray-extralight))",
+          },
+          accent: {
+            amber: "hsl(var(--chart-accent-amber))",
+            teal: "hsl(var(--chart-accent-teal))",
+            purple: "hsl(var(--chart-accent-purple))",
+          },
           positive: "hsl(var(--chart-positive))",
           negative: "hsl(var(--chart-negative))",
-          neutral: "hsl(var(--chart-neutral))",
+          warning: "hsl(var(--chart-warning))",
+        },
+        // Ensure JPMC colors also use HSL vars if they are meant to be themeable
+        // For example:
+        "jpmc-brand-blue": "hsl(var(--chart-blue-primary))",
+        "jpmc-brand-darkblue": "hsl(var(--chart-blue-deep))",
+        jpmc: {
+          blue: "hsl(var(--primary))", // This is already good
+          darkblue: "hsl(var(--chart-blue-deep))",
+          lightblue: "hsl(var(--chart-gray-extralight))", // Or a light blue var
+          gray: "hsl(var(--chart-gray-medium))",
+          lightgray: "hsl(var(--chart-gray-extralight))",
         },
       },
       borderRadius: {
