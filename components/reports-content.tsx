@@ -38,9 +38,9 @@ const fundingData = [
   { month: "Jun", disbursed: 2.7, target: 3.0 },
 ]
 const performanceData = [
-  { name: "Startup A", revenue: 1500000, growth: 15, kpiScore: 85 }, // Assuming revenue in base currency unit
-  { name: "Startup B", revenue: 2200000, growth: 12, kpiScore: 78 },
-  { name: "Startup C", revenue: 1800000, growth: 20, kpiScore: 92 },
+  { name: "Startup A", revenue: 150000000, growth: 15, kpiScore: 85 }, // Assuming revenue in base currency unit
+  { name: "Startup B", revenue: 220000000, growth: 12, kpiScore: 78 },
+  { name: "Startup C", revenue: 180000000, growth: 20, kpiScore: 92 },
 ]
 const complianceStatusData = [
   { name: "Compliant", value: 70, fill: "var(--color-green)" },
@@ -213,14 +213,19 @@ export function ReportsContent() {
                     <YAxis
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(value) => formatCurrency(value * 10000000, selectedCurrency.code, 0)}
+                      tickFormatter={(value) =>
+                        formatCurrency(value * 10000000, selectedCurrency.code, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })
+                      }
                     />
                     <ChartTooltip
                       content={
                         <ChartTooltipContent
                           formatter={(value, name) =>
                             name === chartConfig.disbursed.label || name === chartConfig.target.label
-                              ? formatCurrency(Number(value) * 10000000)
+                              ? formatCurrency(Number(value) * 10000000, selectedCurrency.code)
                               : value
                           }
                         />

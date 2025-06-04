@@ -65,7 +65,6 @@ const keyMetricsData = [
   {
     title: "Funding Disbursed",
     valueAsNumber: 248000000, // Base value in INR for example
-    rawValue: "₹24.8Cr",
     trend: "+15.3%",
     icon: DollarSign,
     trendColor: "text-charting-positive",
@@ -298,7 +297,12 @@ export function DashboardV2Content() {
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}
-                        tickFormatter={(value) => formatCurrency(value * 10000000, selectedCurrency.code, 0)} // Assuming value is in Cr
+                        tickFormatter={(value) =>
+                          formatCurrency(value * 10000000, selectedCurrency.code, {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          })
+                        }
                       />
                       <YAxis
                         yAxisId="right"
@@ -316,7 +320,7 @@ export function DashboardV2Content() {
                             hideLabel={false}
                             formatter={(value, name) =>
                               name === `Disbursed (${selectedCurrency.code} Cr)`
-                                ? formatCurrency(Number(value) * 10000000)
+                                ? formatCurrency(Number(value) * 10000000, selectedCurrency.code) // Pass selectedCurrency.code explicitly
                                 : value
                             }
                           />
@@ -348,9 +352,15 @@ export function DashboardV2Content() {
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm font-medium">{goal.name}</span>
                       <span className="text-sm text-muted-foreground">
-                        {goal.unit === "Cr" ? formatCurrency(goal.currentValue * 10000000) : goal.currentValue} /
                         {goal.unit === "Cr"
-                          ? formatCurrency(goal.targetValue * 10000000, selectedCurrency.code, 0)
+                          ? formatCurrency(goal.currentValue * 10000000, selectedCurrency.code)
+                          : goal.currentValue}{" "}
+                        /
+                        {goal.unit === "Cr"
+                          ? formatCurrency(goal.targetValue * 10000000, selectedCurrency.code, {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0,
+                            })
                           : goal.targetValue}{" "}
                         {goal.unit !== "Cr" ? goal.unit : ""}
                       </span>
@@ -448,8 +458,8 @@ export function DashboardV2Content() {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
+              </CardContent>
+            </ChartContainer>
           </Card>
           <Card>
             <CardHeader>

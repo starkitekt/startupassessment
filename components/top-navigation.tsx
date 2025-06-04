@@ -30,6 +30,7 @@ import {
   ChevronDown,
   IndianRupee,
   Globe,
+  ListChecks,
 } from "lucide-react"
 import { Input } from "./ui/input" // Assuming Input is in ui folder
 import { Badge } from "./ui/badge" // Assuming Badge is in ui folder
@@ -41,6 +42,7 @@ const mainNavItems = [
   { name: "Portfolio", href: "/portfolio", icon: Building2 },
   { name: "Assessments", href: "/assessments", icon: FileText },
   { name: "Mentors", href: "/mentors", icon: Users },
+  { name: "Requests", href: "/requests", icon: ListChecks },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Analytics", href: "/analytics", icon: TrendingUp },
 ]
