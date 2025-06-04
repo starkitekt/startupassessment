@@ -103,7 +103,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-geist;
+    @apply bg-background text-foreground font-geist; /* Ensures Geist is the base body font */
     -webkit-font-smoothing: antialiased; /* Smoother fonts on WebKit */
     -moz-osx-font-smoothing: grayscale; /* Smoother fonts on Firefox */
   }
@@ -114,7 +114,7 @@
   h4,
   h5,
   h6 {
-    @apply font-semibold text-foreground;
+    @apply font-gilroy font-semibold text-foreground; /* Apply Gilroy to all headers */
   }
   h1 {
     @apply text-4xl tracking-tight;

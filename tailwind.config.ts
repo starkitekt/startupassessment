@@ -20,8 +20,10 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        geist: ["var(--font-geist)", "system-ui", "sans-serif"], // Use CSS variable
-        "ibm-plex-mono": ["IBM Plex Mono", "monospace"],
+        // Assumes GeistSans.variable (--font-geist-sans) and GeistMono.variable (--font-geist-mono) are available globally from clientLayout.tsx
+        geist: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        "ibm-plex-mono": ["var(--font-geist-mono)", "monospace"], // Using Geist Mono for IBM Plex Mono alias
+        gilroy: ["Gilroy", "system-ui", "sans-serif"], // Added Gilroy font family
       },
       colors: {
         border: "hsl(var(--border))",

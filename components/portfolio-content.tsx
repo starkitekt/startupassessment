@@ -27,6 +27,7 @@ import {
 } from "recharts" // Renamed RechartsTooltip
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 import { Label } from "@/components/ui/label"
+import Image from "next/image"
 
 // Assuming MRR and totalFunding values are in BASE_CURRENCY (INR)
 const mockPortfolios = [
@@ -310,11 +311,24 @@ export function PortfolioContent() {
                       >
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <img
-                              src={startup.logoUrl || "/placeholder.svg"}
-                              alt={startup.name}
-                              className="h-8 w-8 rounded-full object-cover"
-                            />
+                            {startup.logoUrl && !startup.logoUrl.includes("placeholder.svg") ? (
+                              <Image
+                                src={startup.logoUrl || "/placeholder.svg"}
+                                alt={startup.name}
+                                width={32}
+                                height={32}
+                                className="h-8 w-8 rounded-full object-cover"
+                              />
+                            ) : (
+                              <img // Fallback to img for SVG placeholders if next/image has issues with external SVGs or specific SVG structures
+                                src={
+                                  startup.logoUrl ||
+                                  `/placeholder.svg?height=32&width=32&text=${startup.name.charAt(0)}`
+                                }
+                                alt={startup.name}
+                                className="h-8 w-8 rounded-full object-cover"
+                              />
+                            )}
                             <div>
                               <div className="font-medium">{startup.name}</div>
                               <div className="text-xs text-muted-foreground">{startup.tags.join(", ")}</div>

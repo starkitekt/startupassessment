@@ -20,8 +20,6 @@ import {
   FileText,
   Building2,
   Users,
-  BarChart3,
-  TrendingUp,
   Settings,
   LogOut,
   Search,
@@ -29,20 +27,14 @@ import {
   ChevronDown,
   IndianRupee,
   Globe,
-  ListChecks,
   PlusCircle,
-  Briefcase,
-  ClipboardList,
-  UserCheck,
-  BookOpen,
-  MessageSquare,
   UserPlus,
 } from "lucide-react"
 import { Input } from "./ui/input"
 import { Badge } from "./ui/badge"
 import { useToast } from "./ui/use-toast"
 import { useGlobalSettings } from "@/contexts/global-settings-context"
-import { MobileNavMenu } from "./mobile-nav-menu" // Import the new mobile menu
+import { MobileNavMenu } from "./mobile-nav-menu"
 
 export interface NavItem {
   name: string
@@ -50,60 +42,53 @@ export interface NavItem {
   icon?: React.ElementType
   children?: NavItem[]
   onClick?: () => void
-  isExternal?: boolean // For links that should open in a new tab
-  label?: string // Optional label like "New"
+  isExternal?: boolean
+  label?: string
 }
 
 export type TopNavigationProps = {}
 
 const mainNavItems: NavItem[] = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/" },
   {
     name: "Portfolio",
-    icon: Briefcase,
-    href: "/portfolio", // Parent link
+    href: "/portfolio",
     children: [
       { name: "View All Startups", href: "/portfolio", icon: Building2 },
       { name: "Add New Startup", href: "/portfolio/new", icon: PlusCircle },
-      // { name: "Investment Tracking", href: "/portfolio/investments", icon: TrendingUp },
     ],
   },
   {
     name: "Assessments",
-    icon: ClipboardList,
-    href: "/assessments", // Parent link
+    href: "/assessments",
     children: [
       { name: "All Assessments", href: "/assessments", icon: FileText },
       { name: "New Assessment", href: "/assessments/new", icon: PlusCircle },
-      // { name: "Assessment Templates", href: "/assessments/templates", icon: FileText },
     ],
   },
   {
     name: "Mentors",
-    icon: UserCheck,
-    href: "/mentors", // Parent link
+    href: "/mentors",
     children: [
       { name: "Mentor Network", href: "/mentors", icon: Users },
       { name: "Add New Mentor", href: "/mentors/new", icon: UserPlus },
-      // { name: "Feedback & Ratings", href: "/mentors/feedback", icon: Star },
     ],
   },
-  { name: "Requests", href: "/requests", icon: ListChecks },
-  { name: "Reports", href: "/reports", icon: BarChart3 },
-  { name: "Analytics", href: "/analytics", icon: TrendingUp },
+  { name: "Requests", href: "/requests" },
+  { name: "Reports", href: "/reports" },
+  { name: "Analytics", href: "/analytics" },
 ]
 
 const resourcesNavItems: NavItem[] = [
-  { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
-  { name: "Support Center", href: "/support", icon: MessageSquare },
+  { name: "Knowledge Base", href: "/knowledge-base" },
+  { name: "Support Center", href: "/support" },
 ]
 
-// User Profile Dropdown Items
 const userProfileNavItems = (onSignOut: () => void): NavItem[] => [
-  { name: "My Dashboard", href: "/", icon: LayoutDashboard, onClick: () => {} /* Add shortcut if needed */ },
-  { name: "Profile", href: "/profile", icon: Users, onClick: () => {} /* Add shortcut if needed */ },
-  { name: "Settings", href: "/settings", icon: Settings, onClick: () => {} /* Add shortcut if needed */ },
-  { name: "Sign Out", icon: LogOut, onClick: onSignOut, isExternal: false /* Add shortcut if needed */ },
+  { name: "My Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Profile", href: "/profile", icon: Users },
+  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Sign Out", icon: LogOut, onClick: onSignOut },
 ]
 
 export function TopNavigation(props: TopNavigationProps) {
@@ -131,10 +116,10 @@ export function TopNavigation(props: TopNavigationProps) {
     // Add actual sign out logic here
   }
 
-  const userDisplayName = "Rajesh Kumar" // Mock data
-  const userEmail = "rajesh.k@example.com" // Mock data
+  const userDisplayName = "Rajesh Kumar"
+  const userEmail = "rajesh.k@example.com"
 
-  const renderNavLink = (item: NavItem, index: number) => {
+  const renderNavLink = (item: NavItem) => {
     const isActive = item.href
       ? pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
       : (item.children &&
@@ -155,6 +140,7 @@ export function TopNavigation(props: TopNavigationProps) {
                 isActive
                   ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground"
                   : "text-foreground/70 hover:bg-muted hover:text-foreground/90",
+                !item.icon && "pl-3", // Ensure padding consistency if icon was there
               )}
             >
               {item.icon && <item.icon className="mr-2 h-4 w-4" />}
@@ -193,9 +179,11 @@ export function TopNavigation(props: TopNavigationProps) {
           isActive
             ? "bg-primary text-primary-foreground hover:bg-primary/90"
             : "text-foreground/70 hover:bg-muted hover:text-foreground/90",
+          !item.icon && "px-3", // Ensure padding consistency
         )}
       >
-        {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+        {/* Icon conditionally rendered, removed for specified items */}
+        {/* {item.icon && <item.icon className="mr-2 h-4 w-4" />} */}
         {item.name}
       </Link>
     )
@@ -283,12 +271,14 @@ export function TopNavigation(props: TopNavigationProps) {
         <Button
           variant="ghost"
           className={cn(
-            "relative h-9 w-9 rounded-full",
+            "relative h-9 w-9 rounded-full p-0", // Ensure p-0 for avatar to fill
             isMobile && "w-full flex items-center justify-start p-2 h-auto",
           )}
         >
           <Avatar className="h-8 w-8">
-            <AvatarImage src="/placeholder.svg?height=36&width=36" alt="User Avatar" />
+            {" "}
+            {/* Size matches new logo */}
+            <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User Avatar" />
             <AvatarFallback>RK</AvatarFallback>
           </Avatar>
           {isMobile && <span className="ml-2 text-sm font-medium">{userDisplayName}</span>}
@@ -316,7 +306,6 @@ export function TopNavigation(props: TopNavigationProps) {
                 <Link href={item.href || "#"} className="flex items-center w-full">
                   {item.icon && <item.icon className="mr-2 h-4 w-4" />}
                   <span>{item.name}</span>
-                  {/* item.shortcut && <DropdownMenuShortcut>{item.shortcut}</DropdownMenuShortcut> */}
                 </Link>
               </DropdownMenuItem>
             ),
@@ -329,7 +318,6 @@ export function TopNavigation(props: TopNavigationProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <div className="container flex h-16 max-w-screen-2xl items-center">
-        {/* Mobile Menu Trigger - Placed on the left */}
         <div className="md:hidden">
           <MobileNavMenu
             mainNavItems={mainNavItems}
@@ -340,23 +328,17 @@ export function TopNavigation(props: TopNavigationProps) {
             currentPathname={pathname}
             globalSettingsComponent={<GlobalSettingsComponent />}
             searchComponent={<SearchComponent />}
-            // notificationsComponent={<NotificationsComponent />} // Can be added if needed in mobile sheet
-            userProfileComponent={<UserProfileComponent />}
+            userProfileComponent={<UserProfileComponent isMobile />}
           />
         </div>
 
-        {/* Logo and Main Title */}
-        <Link href="/" className="hidden md:flex items-center space-x-2 mr-6">
-          <div className="h-8 w-8 rounded-md bg-gradient-to-r from-jpmc-brand-blue-hsl to-jpmc-brand-darkblue-hsl flex items-center justify-center">
-            <span className="text-white font-bold text-sm">SI</span>
-          </div>
-          <span className="font-semibold text-lg text-foreground">Incubator Portal</span>
+        {/* Updated Logo Element */}
+        <Link href="/" aria-label="Homepage" className="hidden md:flex items-center mr-6">
+          <div className="h-8 w-8 rounded-full jpmc-gradient flex items-center justify-center" />
         </Link>
 
-        {/* Desktop Main Navigation Links */}
         <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
           {mainNavItems.map(renderNavLink)}
-          {/* Resources Dropdown for Desktop */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -370,7 +352,9 @@ export function TopNavigation(props: TopNavigationProps) {
               {resourcesNavItems.map((item) => (
                 <DropdownMenuItem key={item.name} asChild>
                   <Link href={item.href || "#"} className="flex items-center w-full">
-                    {item.icon && <item.icon className="mr-2 h-4 w-4 text-muted-foreground" />} {item.name}
+                    {/* Icons can be kept here for dropdowns if desired, or removed */}
+                    {/* {item.icon && <item.icon className="mr-2 h-4 w-4 text-muted-foreground" />} */}
+                    {item.name}
                   </Link>
                 </DropdownMenuItem>
               ))}
@@ -378,7 +362,6 @@ export function TopNavigation(props: TopNavigationProps) {
           </DropdownMenu>
         </nav>
 
-        {/* Spacer and Right-side controls */}
         <div className="flex flex-1 items-center justify-end space-x-2 sm:space-x-3">
           <div className="hidden lg:block">
             <SearchComponent />
