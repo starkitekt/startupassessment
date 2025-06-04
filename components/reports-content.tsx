@@ -93,10 +93,10 @@ export function ReportsContent() {
 
   return (
     <TooltipProvider>
-      <div className="space-y-6 p-4 md:p-6">
+      <div className="space-y-8 lg:space-y-10 p-4 md:p-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-jpmc-darkblue dark:text-jpmc-lightblue">Reports Center</h1>
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">Reports Center</h1>
             <p className="text-muted-foreground">Generate and view detailed reports on incubator activities.</p>
           </div>
           <Tooltip>
@@ -116,7 +116,7 @@ export function ReportsContent() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
+            <CardTitle className="flex items-center text-lg font-semibold">
               <Filter className="mr-2 h-5 w-5 text-jpmc-blue" /> Report Filters
             </CardTitle>
           </CardHeader>
@@ -200,7 +200,7 @@ export function ReportsContent() {
           <TabsContent value="funding" className="mt-6 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Monthly Funding Disbursal</CardTitle>
+                <CardTitle className="text-xl font-semibold">Monthly Funding Disbursal</CardTitle>
                 <CardDescription>
                   Comparison of disbursed vs. target funding ({selectedCurrency.code} Cr).
                 </CardDescription>
@@ -268,7 +268,7 @@ export function ReportsContent() {
           <TabsContent value="performance" className="mt-6 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Startup Performance Overview</CardTitle>
+                <CardTitle className="text-xl font-semibold">Startup Performance Overview</CardTitle>
                 <CardDescription>Key performance indicators for selected startups.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -311,7 +311,7 @@ export function ReportsContent() {
           <TabsContent value="compliance" className="mt-6 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Portfolio Compliance Status</CardTitle>
+                <CardTitle className="text-xl font-semibold">Portfolio Compliance Status</CardTitle>
                 <CardDescription>Overall compliance distribution of startups.</CardDescription>
               </CardHeader>
               <CardContent className="flex items-center justify-center">
@@ -355,7 +355,7 @@ export function ReportsContent() {
           <TabsContent value="cohort" className="mt-6 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Cohort Analysis (Example)</CardTitle>
+                <CardTitle className="text-xl font-semibold">Cohort Analysis (Example)</CardTitle>
                 <CardDescription>Performance metrics for the selected cohort.</CardDescription>
               </CardHeader>
               <CardContent>

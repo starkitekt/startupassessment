@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react" // Added useEffect
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -29,26 +29,27 @@ import {
   Target,
   Goal,
 } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
+// Removed useToast as it's not directly used here, errors are handled in GlobalSettingsContext
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useGlobalSettings } from "@/contexts/global-settings-context"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
-// Snapshot data (can be expanded or fetched)
+// --- Mock Data Definitions ---
+// Assuming MRR and funding values are in BASE_CURRENCY (INR)
 const mockPortfoliosSnapshot = [
-  { id: "STP001", name: "Innovatech Solutions", sector: "FinTech", stage: "Seed", healthScore: 85, mrr: 15000 },
-  { id: "STP002", name: "HealthWell AI", sector: "HealthTech", stage: "Series A", healthScore: 78, mrr: 45000 },
-  { id: "STP003", name: "EduSphere Learning", sector: "EdTech", stage: "Pre-Seed", healthScore: 92, mrr: 2000 },
-  { id: "STP004", name: "AgriGrow Innovations", sector: "AgriTech", stage: "Seed", healthScore: 80, mrr: 8000 },
-  { id: "STP005", name: "Retail Rocket", sector: "E-commerce", stage: "Growth", healthScore: 70, mrr: 60000 },
-  { id: "STP006", name: "SaaSify Ltd", sector: "SaaS", stage: "Series A", healthScore: 88, mrr: 75000 },
+  { id: "STP001", name: "Innovatech Solutions", sector: "FinTech", stage: "Seed", healthScore: 85, mrr: 1500000 }, // e.g. 15 Lakh INR
+  { id: "STP002", name: "HealthWell AI", sector: "HealthTech", stage: "Series A", healthScore: 78, mrr: 4500000 },
+  { id: "STP003", name: "EduSphere Learning", sector: "EdTech", stage: "Pre-Seed", healthScore: 92, mrr: 200000 },
+  { id: "STP004", name: "AgriGrow Innovations", sector: "AgriTech", stage: "Seed", healthScore: 80, mrr: 800000 },
+  { id: "STP005", name: "Retail Rocket", sector: "E-commerce", stage: "Growth", healthScore: 70, mrr: 6000000 },
+  { id: "STP006", name: "SaaSify Ltd", sector: "SaaS", stage: "Series A", healthScore: 88, mrr: 7500000 },
 ]
 
 const keyMetricsData = [
   {
     title: "Total Startups",
-    value: "1,247",
+    value: "1,247", // Static value
     trend: "+12.5%",
     icon: Building2,
     trendColor: "text-charting-positive",
@@ -56,7 +57,7 @@ const keyMetricsData = [
   },
   {
     title: "Active Applications",
-    value: "89",
+    value: "89", // Static value
     trend: "+8.2%",
     icon: FileText,
     trendColor: "text-charting-positive",
@@ -64,7 +65,7 @@ const keyMetricsData = [
   },
   {
     title: "Funding Disbursed",
-    valueAsNumber: 248000000, // Base value in INR for example
+    valueAsNumber: 248000000, // Base value in INR (24.8 Cr)
     trend: "+15.3%",
     icon: DollarSign,
     trendColor: "text-charting-positive",
@@ -72,7 +73,7 @@ const keyMetricsData = [
   },
   {
     title: "Mentors Active",
-    value: "42",
+    value: "42", // Static value
     trend: "+5",
     icon: Users,
     trendColor: "text-charting-positive",
@@ -80,8 +81,9 @@ const keyMetricsData = [
   },
 ]
 
+// Assuming 'disbursed' is in Crores of INR
 const fundingActivityData = [
-  { month: "Jan", disbursed: 1.2, applications: 45 },
+  { month: "Jan", disbursed: 1.2, applications: 45 }, // 1.2 Cr INR
   { month: "Feb", disbursed: 1.8, applications: 52 },
   { month: "Mar", disbursed: 2.5, applications: 48 },
   { month: "Apr", disbursed: 2.1, applications: 61 },
@@ -129,32 +131,35 @@ const pendingTasks = [
   { id: "TSK002", title: "Schedule Follow-up with HealthWell AI", dueDate: "In 3 days", priority: "Medium" },
 ]
 
+// Assuming currentValue and targetValue for funding are in Crores of INR
 const incubatorGoals = [
   {
     id: "goal1",
     name: "Annual Funding Disbursed",
-    currentValue: 24.8,
-    targetValue: 50,
-    unit: "Cr",
+    currentValueInBase: 24.8 * 10000000, // 24.8 Cr INR
+    targetValueInBase: 50 * 10000000, // 50 Cr INR
+    unit: "Cr", // Unit for display context, actual value is in base
     progress: (24.8 / 50) * 100,
   },
   {
     id: "goal2",
     name: "New Startups Onboarded (Q3)",
-    currentValue: 12,
-    targetValue: 20,
+    currentValueInBase: 12, // Assuming this is a count, not currency
+    targetValueInBase: 20,
     unit: "",
     progress: (12 / 20) * 100,
   },
-  { id: "goal3", name: "Successful Exits (YTD)", currentValue: 3, targetValue: 5, unit: "", progress: (3 / 5) * 100 },
+  {
+    id: "goal3",
+    name: "Successful Exits (YTD)",
+    currentValueInBase: 3, // Assuming this is a count
+    targetValueInBase: 5,
+    unit: "",
+    progress: (3 / 5) * 100,
+  },
 ]
 
-const chartConfig = {
-  disbursed: { label: "Disbursed (Cr)", color: "hsl(var(--chart-primary))" },
-  applications: { label: "Applications", color: "hsl(var(--chart-secondary))" },
-}
-
-const COLORS = [
+const CHART_COLORS = [
   "hsl(var(--chart-1))",
   "hsl(var(--chart-2))",
   "hsl(var(--chart-3))",
@@ -164,50 +169,68 @@ const COLORS = [
   "hsl(var(--chart-accent2))",
 ]
 
+// --- Component ---
 export function DashboardV2Content() {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const { toast } = useToast()
-  const { formatCurrency, selectedCountry, selectedCurrency } = useGlobalSettings()
+  const { formatCurrency, selectedCountry, selectedCurrency, isExchangeRateLoading } = useGlobalSettings()
 
-  React.useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1500)
+  // Simulate initial loading
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1000)
     return () => clearTimeout(timer)
   }, [])
 
+  const chartConfig = useMemo(
+    () => ({
+      disbursed: { label: `Disbursed (${selectedCurrency.code} Cr)`, color: "hsl(var(--chart-primary))" },
+      applications: { label: "Applications", color: "hsl(var(--chart-secondary))" },
+    }),
+    [selectedCurrency.code],
+  )
+
   const portfolioHealthDistribution = useMemo(() => {
-    const low = mockPortfoliosSnapshot.filter((s) => s.healthScore >= 80).length
-    const medium = mockPortfoliosSnapshot.filter((s) => s.healthScore >= 60 && s.healthScore < 80).length
-    const high = mockPortfoliosSnapshot.filter((s) => s.healthScore < 60).length
+    const healthy = mockPortfoliosSnapshot.filter((s) => s.healthScore >= 80).length
+    const average = mockPortfoliosSnapshot.filter((s) => s.healthScore >= 60 && s.healthScore < 80).length
+    const atRisk = mockPortfoliosSnapshot.filter((s) => s.healthScore < 60).length
     return [
-      { name: "Low Risk (>=80%)", value: low, fill: "var(--color-green)" },
-      { name: "Medium Risk (60-79%)", value: medium, fill: "var(--color-amber)" },
-      { name: "High Risk (<60%)", value: high, fill: "var(--color-red)" },
+      { name: "Healthy (>=80%)", value: healthy, fill: "var(--chart-positive)" }, // Using CSS variables for colors
+      { name: "Average (60-79%)", value: average, fill: "var(--chart-accent1)" },
+      { name: "At Risk (<60%)", value: atRisk, fill: "var(--chart-negative)" },
     ]
-  }, [])
+  }, []) // No external dependencies, runs once
 
   const sectorDistribution = useMemo(() => {
     const counts: Record<string, number> = {}
     mockPortfoliosSnapshot.forEach((s) => {
       counts[s.sector] = (counts[s.sector] || 0) + 1
     })
-    return Object.entries(counts).map(([name, value], index) => ({ name, value, fill: COLORS[index % COLORS.length] }))
-  }, [])
+    return Object.entries(counts).map(([name, value], index) => ({
+      name,
+      value,
+      fill: CHART_COLORS[index % CHART_COLORS.length],
+    }))
+  }, []) // No external dependencies, runs once
 
   const stageDistribution = useMemo(() => {
     const counts: Record<string, number> = {}
     mockPortfoliosSnapshot.forEach((s) => {
       counts[s.stage] = (counts[s.stage] || 0) + 1
     })
-    return Object.entries(counts).map(([name, value], index) => ({ name, value, fill: COLORS[index % COLORS.length] }))
-  }, [])
+    return Object.entries(counts).map(([name, value], index) => ({
+      name,
+      value,
+      fill: CHART_COLORS[index % CHART_COLORS.length],
+    }))
+  }, []) // No external dependencies, runs once
 
   const handleViewAllPortfolio = () => router.push("/portfolio")
   const handleViewStartup = (startupId: string) => router.push(`/portfolio/${startupId}`)
   const handleNewAssessment = () => router.push("/assessments/new")
   const handleViewAllTasks = () => router.push("/tasks")
 
-  if (isLoading) {
+  // Skeleton loader for initial load or when exchange rates are loading
+  if (isLoading || isExchangeRateLoading) {
     return (
       <div className="space-y-6 lg:space-y-8 p-4 md:p-6">
         <Skeleton className="h-10 w-1/3" />
@@ -232,10 +255,10 @@ export function DashboardV2Content() {
 
   return (
     <TooltipProvider>
-      <div className="space-y-6 lg:space-y-8 p-4 md:p-6">
+      <div className="space-y-8 lg:space-y-10 p-4 md:p-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Incubator Dashboard</h1>
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">Incubator Dashboard</h1>
             <p className="text-sm text-primary dark:text-primary/80">
               Displaying data for {selectedCountry.name} in {selectedCurrency.code}.
             </p>
@@ -249,11 +272,11 @@ export function DashboardV2Content() {
         {/* Key Metrics */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {keyMetricsData.map((metric) => (
-            <Card key={metric.title} className="hover:shadow-lg transition-shadow duration-200">
+            <Card key={metric.title} className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <CardTitle className="text-sm font-medium cursor-help">{metric.title}</CardTitle>
+                    <CardTitle className="text-base font-medium cursor-help">{metric.title}</CardTitle>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{metric.tooltip}</p>
@@ -263,9 +286,7 @@ export function DashboardV2Content() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-numerical">
-                  {metric.title === "Funding Disbursed" && metric.valueAsNumber
-                    ? formatCurrency(metric.valueAsNumber)
-                    : metric.value}
+                  {metric.valueAsNumber ? formatCurrency(metric.valueAsNumber) : metric.value}
                 </div>
                 <p className={cn("text-xs text-muted-foreground flex items-center", metric.trendColor)}>
                   <TrendingUp className="h-3 w-3 mr-1" /> {metric.trend}
@@ -277,17 +298,20 @@ export function DashboardV2Content() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <Card>
+            {/* Funding & Application Activity Chart */}
+            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Activity className="mr-2 h-5 w-5 text-primary" /> Funding & Application Activity
                 </CardTitle>
-                <CardDescription>Monthly trends for funding disbursed and applications received.</CardDescription>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Monthly trends for funding disbursed and applications received.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ChartContainer config={chartConfig} className="h-[300px] w-full">
                   <ResponsiveContainer>
-                    <BarChart data={fundingActivityData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
+                    <BarChart data={fundingActivityData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={{ strokeOpacity: 0.5 }} />
                       <YAxis
@@ -300,9 +324,11 @@ export function DashboardV2Content() {
                         tickFormatter={(value) =>
                           formatCurrency(value * 10000000, selectedCurrency.code, {
                             minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
+                            maximumFractionDigits: 1, // Show 1 decimal for Cr
+                            // notation: "compact", // Could use compact notation like 1.2Cr
                           })
                         }
+                        width={80}
                       />
                       <YAxis
                         yAxisId="right"
@@ -317,12 +343,12 @@ export function DashboardV2Content() {
                         content={
                           <ChartTooltipContent
                             indicator="dashed"
-                            hideLabel={false}
-                            formatter={(value, name) =>
-                              name === `Disbursed (${selectedCurrency.code} Cr)`
-                                ? formatCurrency(Number(value) * 10000000, selectedCurrency.code) // Pass selectedCurrency.code explicitly
-                                : value
-                            }
+                            formatter={(value, name, item) => {
+                              if (item.dataKey === "disbursed") {
+                                return formatCurrency(Number(value) * 10000000, selectedCurrency.code)
+                              }
+                              return String(value)
+                            }}
                           />
                         }
                       />
@@ -330,21 +356,31 @@ export function DashboardV2Content() {
                       <Bar
                         yAxisId="left"
                         dataKey="disbursed"
-                        name={`Disbursed (${selectedCurrency.code} Cr)`}
+                        name={chartConfig.disbursed.label}
+                        fill="hsl(var(--chart-primary))"
                         radius={[4, 4, 0, 0]}
                       />
-                      <Bar yAxisId="right" dataKey="applications" name="Applications" radius={[4, 4, 0, 0]} />
+                      <Bar
+                        yAxisId="right"
+                        dataKey="applications"
+                        name={chartConfig.applications.label}
+                        fill="hsl(var(--chart-secondary))"
+                        radius={[4, 4, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               </CardContent>
             </Card>
-            <Card>
+            {/* Incubator Goals Progress */}
+            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Goal className="mr-2 h-5 w-5 text-primary" /> Incubator Goals Progress
                 </CardTitle>
-                <CardDescription>Tracking key performance indicators against targets.</CardDescription>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Tracking key performance indicators against targets.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {incubatorGoals.map((goal) => (
@@ -352,16 +388,13 @@ export function DashboardV2Content() {
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm font-medium">{goal.name}</span>
                       <span className="text-sm text-muted-foreground">
+                        {goal.unit === "Cr" ? formatCurrency(goal.currentValueInBase) : goal.currentValueInBase} /
                         {goal.unit === "Cr"
-                          ? formatCurrency(goal.currentValue * 10000000, selectedCurrency.code)
-                          : goal.currentValue}{" "}
-                        /
-                        {goal.unit === "Cr"
-                          ? formatCurrency(goal.targetValue * 10000000, selectedCurrency.code, {
+                          ? formatCurrency(goal.targetValueInBase, selectedCurrency.code, {
                               minimumFractionDigits: 0,
                               maximumFractionDigits: 0,
                             })
-                          : goal.targetValue}{" "}
+                          : goal.targetValueInBase}{" "}
                         {goal.unit !== "Cr" ? goal.unit : ""}
                       </span>
                     </div>
@@ -373,12 +406,15 @@ export function DashboardV2Content() {
           </div>
 
           <div className="space-y-6">
-            <Card>
+            {/* Application Funnel Chart */}
+            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Target className="mr-2 h-5 w-5 text-primary" /> Application Funnel
                 </CardTitle>
-                <CardDescription>Conversion through application stages.</CardDescription>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Conversion through application stages.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ChartContainer config={{}} className="h-[300px] w-full">
@@ -398,12 +434,15 @@ export function DashboardV2Content() {
                 </ChartContainer>
               </CardContent>
             </Card>
-            <Card>
+            {/* Portfolio Health Chart */}
+            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <PieChartIcon className="mr-2 h-5 w-5 text-primary" /> Portfolio Health
                 </CardTitle>
-                <CardDescription>Distribution of startups by risk assessment.</CardDescription>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Distribution of startups by risk assessment.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ChartContainer config={{}} className="h-[250px] w-full">
@@ -415,12 +454,12 @@ export function DashboardV2Content() {
                         nameKey="name"
                         cx="50%"
                         cy="50%"
-                        outerRadius={70} // Adjusted for better label fit
+                        outerRadius={70}
                         labelLine={false}
                         label={({ name, percent }) => `${name.split(" ")[0]}: ${(percent * 100).toFixed(0)}%`}
                       >
-                        {portfolioHealthDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        {portfolioHealthDistribution.map((entry) => (
+                          <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                         ))}
                       </Pie>
                       <ChartTooltip content={<ChartTooltipContent />} />
@@ -433,15 +472,16 @@ export function DashboardV2Content() {
           </div>
         </div>
 
+        {/* Sector and Stage Distribution Charts */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-          {" "}
-          {/* Changed to 2 columns for better fit */}
-          <Card>
+          <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <BarChart3Icon className="mr-2 h-5 w-5 text-primary" /> Sector Distribution
               </CardTitle>
-              <CardDescription>Number of startups per sector.</CardDescription>
+              <CardDescription className="text-sm text-muted-foreground">
+                Number of startups per sector.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ChartContainer config={{}} className="h-[250px] w-full">
@@ -452,35 +492,35 @@ export function DashboardV2Content() {
                     <YAxis dataKey="name" type="category" width={80} interval={0} fontSize={11} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="value" name="Startups" radius={[0, 4, 4, 0]}>
-                      {sectorDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      {sectorDistribution.map((entry) => (
+                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                       ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </ChartContainer>
+              </ChartContainer>
+            </CardContent>
           </Card>
-          <Card>
+          <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Briefcase className="mr-2 h-5 w-5 text-primary" /> Stage Distribution
               </CardTitle>
-              <CardDescription>Number of startups per investment stage.</CardDescription>
+              <CardDescription className="text-sm text-muted-foreground">
+                Number of startups per investment stage.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ChartContainer config={{}} className="h-[250px] w-full">
                 <ResponsiveContainer>
                   <BarChart data={stageDistribution} margin={{ left: -10, right: 10, bottom: 30 }}>
-                    {" "}
-                    {/* Added bottom margin for labels */}
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="name" fontSize={11} interval={0} angle={-40} textAnchor="end" height={60} />
                     <YAxis />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="value" name="Startups" radius={[4, 4, 0, 0]}>
-                      {stageDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      {stageDistribution.map((entry) => (
+                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -490,14 +530,17 @@ export function DashboardV2Content() {
           </Card>
         </div>
 
+        {/* Portfolio Snapshot and Tasks/Activity */}
         <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-2 border hover:shadow-xl transition-shadow duration-300 ease-in-out">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center">
                   <Building2 className="mr-2 h-5 w-5 text-primary" /> Portfolio Snapshot
                 </CardTitle>
-                <CardDescription>Quick overview of recent or key startups.</CardDescription>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Quick overview of recent or key startups.
+                </CardDescription>
               </div>
               <Button variant="outline" size="sm" onClick={handleViewAllPortfolio}>
                 <ListFilter className="mr-2 h-4 w-4" /> View All Portfolio
@@ -540,7 +583,10 @@ export function DashboardV2Content() {
                           variant={
                             startup.healthScore > 80 ? "default" : startup.healthScore > 60 ? "outline" : "destructive"
                           }
-                          className={cn(startup.healthScore > 80 && "bg-charting-positive text-white")}
+                          className={cn(
+                            startup.healthScore > 80 && "bg-charting-positive text-charting-positive-foreground",
+                            startup.healthScore <= 60 && "bg-charting-negative text-charting-negative-foreground",
+                          )}
                         >
                           {startup.healthScore}%
                         </Badge>
@@ -558,7 +604,7 @@ export function DashboardV2Content() {
           </Card>
 
           <div className="space-y-6">
-            <Card>
+            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <ClipboardCheck className="mr-2 h-5 w-5 text-primary" /> Your Pending Tasks
@@ -575,7 +621,9 @@ export function DashboardV2Content() {
                         </div>
                         <Badge
                           variant={task.priority === "High" ? "destructive" : "secondary"}
-                          className={cn(task.priority === "High" && "bg-red-500 text-white")}
+                          className={cn(
+                            task.priority === "High" && "bg-red-500 text-white dark:bg-red-700 dark:text-red-100",
+                          )}
                         >
                           {task.priority}
                         </Badge>
@@ -592,7 +640,7 @@ export function DashboardV2Content() {
                 </Button>
               </CardFooter>
             </Card>
-            <Card>
+            <Card className="border hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <BellRing className="mr-2 h-5 w-5 text-primary" /> Recent Activity

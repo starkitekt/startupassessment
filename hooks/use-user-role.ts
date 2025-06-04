@@ -3,18 +3,24 @@
 
 export type UserRole = "admin" | "editor" | "viewer"
 
-// You can change this to test different roles:
-const MOCK_CURRENT_ROLE: UserRole = "admin"
-const MOCK_CURRENT_USER_ID: string = "user123" // Corresponds to Rajesh Kumar (Admin) in mockUsers
-const MOCK_CURRENT_USER_NAME: string = "Rajesh Kumar (Admin)"
+// --- Mock User Configuration ---
+// You can change MOCK_CURRENT_USER_ID to test different roles.
+// Ensure the ID matches one in mockUsers.
+const MOCK_CURRENT_USER_ID: string = "user123" // Rajesh Kumar (Admin)
+
+export const mockUsers: ReadonlyArray<{ id: string; name: string; role: UserRole }> = [
+  { id: "user123", name: "Rajesh Kumar (Admin)", role: "admin" },
+  { id: "user456", name: "Priya Sharma (Editor)", role: "editor" },
+  { id: "user789", name: "Amit Singh (Viewer)", role: "viewer" },
+  { id: "user101", name: "Sneha Patel (Editor)", role: "editor" },
+]
 
 export const useUserRole = (): { role: UserRole; userId: string; userName: string } => {
-  return { role: MOCK_CURRENT_ROLE, userId: MOCK_CURRENT_USER_ID, userName: MOCK_CURRENT_USER_NAME }
-}
+  const currentUser = mockUsers.find((user) => user.id === MOCK_CURRENT_USER_ID) || mockUsers[0] // Fallback to first user
 
-export const mockUsers = [
-  { id: "user123", name: "Rajesh Kumar (Admin)" },
-  { id: "user456", name: "Priya Sharma (Editor)" },
-  { id: "user789", name: "Amit Singh (Viewer)" },
-  { id: "user101", name: "Sneha Patel (Editor)" },
-]
+  return {
+    role: currentUser.role,
+    userId: currentUser.id,
+    userName: currentUser.name,
+  }
+}

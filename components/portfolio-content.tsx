@@ -1,10 +1,6 @@
 "use client"
 
-import { ChartTooltip } from "@/components/ui/chart"
-
-import { Label } from "@/components/ui/label"
-
-import React, { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react" // Added useEffect
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -18,11 +14,21 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/use-toast"
 import { cn } from "@/lib/utils"
 import { useGlobalSettings } from "@/contexts/global-settings-context"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { BarChart, Bar, Cell, ResponsiveContainer, CartesianGrid, XAxis, YAxis } from "recharts"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import {
+  BarChart,
+  Bar,
+  Cell,
+  ResponsiveContainer,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip as RechartsTooltip,
+} from "recharts" // Renamed RechartsTooltip
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
+import { Label } from "@/components/ui/label"
 
-// Expanded Mock Data for Portfolio
+// Assuming MRR and totalFunding values are in BASE_CURRENCY (INR)
 const mockPortfolios = [
   {
     id: "STP001",
@@ -31,8 +37,8 @@ const mockPortfolios = [
     sector: "FinTech",
     stage: "Seed",
     fundingStatus: "Funded",
-    totalFunding: 500000,
-    mrr: 15000,
+    totalFunding: 50000000, // 5 Cr INR
+    mrr: 1500000, // 15 Lakh INR
     userGrowth: 25,
     assignedMentor: "Ananya Sharma",
     lastActivity: "2024-05-15",
@@ -46,14 +52,15 @@ const mockPortfolios = [
     sector: "HealthTech",
     stage: "Series A",
     fundingStatus: "Seeking",
-    totalFunding: 1200000,
-    mrr: 45000,
+    totalFunding: 120000000, // 12 Cr INR
+    mrr: 4500000, // 45 Lakh INR
     userGrowth: 18,
     assignedMentor: "Vikram Singh",
     lastActivity: "2024-05-20",
     tags: ["Diagnostics", "ML"],
     healthScore: 78,
   },
+  // ... (Add more mock data with consistent currency assumptions if needed)
   {
     id: "STP003",
     name: "EduSphere Learning",
@@ -61,107 +68,17 @@ const mockPortfolios = [
     sector: "EdTech",
     stage: "Pre-Seed",
     fundingStatus: "Bootstrapped",
-    totalFunding: 50000,
-    mrr: 2000,
+    totalFunding: 5000000, // 50 Lakh INR
+    mrr: 200000, // 2 Lakh INR
     userGrowth: 35,
     assignedMentor: "Priya Desai",
     lastActivity: "2024-05-10",
     tags: ["K-12", "Gamification"],
     healthScore: 92,
   },
-  {
-    id: "STP004",
-    name: "AgriGrow Innovations",
-    logoUrl: "/placeholder.svg?height=32&width=32&text=AI",
-    sector: "AgriTech",
-    stage: "Seed",
-    fundingStatus: "Funded",
-    totalFunding: 300000,
-    mrr: 8000,
-    userGrowth: 22,
-    assignedMentor: "Rohan Mehta",
-    lastActivity: "2024-05-18",
-    tags: ["IoT", "Sustainable Farming"],
-    healthScore: 80,
-  },
-  {
-    id: "STP005",
-    name: "GreenCycle Solutions",
-    logoUrl: "/placeholder.svg?height=32&width=32&text=GS",
-    sector: "CleanTech",
-    stage: "Series B",
-    fundingStatus: "Funded",
-    totalFunding: 5000000,
-    mrr: 120000,
-    userGrowth: 15,
-    assignedMentor: "Sneha Patel",
-    lastActivity: "2024-05-22",
-    tags: ["Recycling", "Sustainability"],
-    healthScore: 88,
-  },
-  {
-    id: "STP006",
-    name: "SecureData Systems",
-    logoUrl: "/placeholder.svg?height=32&width=32&text=SS",
-    sector: "Cybersecurity",
-    stage: "Seed",
-    fundingStatus: "Seeking",
-    totalFunding: 200000,
-    mrr: 5000,
-    userGrowth: 40,
-    assignedMentor: "Arjun Reddy",
-    lastActivity: "2024-05-25",
-    tags: ["Encryption", "Data Protection"],
-    healthScore: 75,
-  },
-  {
-    id: "STP007",
-    name: "SmartRetail AI",
-    logoUrl: "/placeholder.svg?height=32&width=32&text=SA",
-    sector: "RetailTech",
-    stage: "Pre-Seed",
-    fundingStatus: "Bootstrapped",
-    totalFunding: 10000,
-    mrr: 1000,
-    userGrowth: 50,
-    assignedMentor: "Diya Sharma",
-    lastActivity: "2024-05-01",
-    tags: ["Analytics", "Personalization"],
-    healthScore: 95,
-  },
-  {
-    id: "STP008",
-    name: "LogiChain Solutions",
-    logoUrl: "/placeholder.svg?height=32&width=32&text=LS",
-    sector: "Logistics",
-    stage: "Series A",
-    fundingStatus: "Funded",
-    totalFunding: 2500000,
-    mrr: 90000,
-    userGrowth: 20,
-    assignedMentor: "Rajesh Kumar",
-    lastActivity: "2024-06-01",
-    tags: ["Supply Chain", "AI"],
-    healthScore: 82,
-  },
-  {
-    id: "STP009",
-    name: "TravelEasy Platform",
-    logoUrl: "/placeholder.svg?height=32&width=32&text=TP",
-    sector: "TravelTech",
-    stage: "Seed",
-    fundingStatus: "Seeking",
-    totalFunding: 400000,
-    mrr: 12000,
-    userGrowth: 30,
-    assignedMentor: "Priya Desai",
-    lastActivity: "2024-05-28",
-    tags: ["Booking", "AI Recommendations"],
-    healthScore: 70,
-  },
 ]
 
-const sectors = [
+const SECTORS = [
   "All",
   "FinTech",
   "HealthTech",
@@ -176,23 +93,26 @@ const sectors = [
   "TravelTech",
   "Deep Tech",
 ]
-const stages = ["All", "Pre-Seed", "Seed", "Series A", "Series B", "Growth", "Exit"]
-const fundingStatuses = ["All", "Bootstrapped", "Seeking", "Funded", "Acquired"]
+const STAGES = ["All", "Pre-Seed", "Seed", "Series A", "Series B", "Growth", "Exit"]
+const FUNDING_STATUSES = ["All", "Bootstrapped", "Seeking", "Funded", "Acquired"]
+const CHART_COLORS = [
+  "hsl(var(--chart-positive))",
+  "hsl(var(--chart-accent1))",
+  "hsl(var(--chart-neutral))",
+  "hsl(var(--chart-secondary))",
+  "hsl(var(--chart-primary))",
+]
 
 export function PortfolioContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [filters, setFilters] = useState({
-    sector: "All",
-    stage: "All",
-    fundingStatus: "All",
-  })
+  const [filters, setFilters] = useState({ sector: "All", stage: "All", fundingStatus: "All" })
   const router = useRouter()
   const { toast } = useToast()
-  const { formatCurrency, selectedCurrency } = useGlobalSettings()
+  const { formatCurrency, selectedCurrency, isExchangeRateLoading } = useGlobalSettings()
 
-  React.useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000)
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 700) // Simulate loading
     return () => clearTimeout(timer)
   }, [])
 
@@ -213,60 +133,49 @@ export function PortfolioContent() {
     })
   }, [searchTerm, filters])
 
-  const handleAddNewStartup = () => {
-    router.push("/portfolio/new")
-  }
-
-  const viewStartupDetails = (startupId: string) => {
-    router.push(`/portfolio/${startupId}`)
-  }
-
   const fundingStatusCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     mockPortfolios.forEach((startup) => {
       counts[startup.fundingStatus] = (counts[startup.fundingStatus] || 0) + 1
     })
-    return Object.entries(counts).map(([name, value]) => ({
+    return Object.entries(counts).map(([name, value], index) => ({
       name,
       value,
-      fill:
-        name === "Funded"
-          ? "hsl(var(--chart-positive))"
-          : name === "Seeking"
-            ? "hsl(var(--chart-accent1))"
-            : "hsl(var(--chart-neutral))",
+      fill: CHART_COLORS[index % CHART_COLORS.length],
     }))
-  }, [])
+  }, []) // Depends only on mockPortfolios, which is static here
 
-  if (isLoading) {
+  const handleAddNewStartup = () => router.push("/portfolio/new")
+  const viewStartupDetails = (startupId: string) => router.push(`/portfolio/${startupId}`)
+
+  if (isLoading || isExchangeRateLoading) {
     return (
       <div className="space-y-6 p-4 md:p-6">
         <div className="flex items-center justify-between">
-          {" "}
-          <Skeleton className="h-10 w-48" /> <Skeleton className="h-10 w-36" />{" "}
+          <Skeleton className="h-10 w-48" /> <Skeleton className="h-10 w-36" />
         </div>
         <Card>
-          {" "}
           <CardContent className="p-4 space-y-4">
-            {" "}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {" "}
-              <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" />{" "}
-              <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" />{" "}
-            </div>{" "}
-          </CardContent>{" "}
+              <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" />
+            </div>
+          </CardContent>
         </Card>
-        <Skeleton className="h-[400px] w-full" />
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <Skeleton className="h-[350px] w-full xl:col-span-1" />
+          <Skeleton className="h-[500px] w-full xl:col-span-2" />
+        </div>
       </div>
     )
   }
 
   return (
     <TooltipProvider>
-      <div className="space-y-6 p-4 md:p-6">
+      <div className="space-y-8 lg:space-y-10 p-4 md:p-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-jpmc-darkblue dark:text-jpmc-lightblue">Startup Portfolio</h1>
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">Startup Portfolio</h1>
             <p className="text-muted-foreground">Manage and track all startups in your portfolio.</p>
           </div>
           <Button onClick={handleAddNewStartup} className="w-full sm:w-auto jpmc-gradient text-white">
@@ -274,7 +183,7 @@ export function PortfolioContent() {
           </Button>
         </div>
 
-        <Card>
+        <Card className="border-muted shadow-sm hover:shadow-md transition-shadow duration-200">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center text-xl">
               <Filter className="mr-2 h-5 w-5 text-jpmc-blue" /> Filters
@@ -283,16 +192,7 @@ export function PortfolioContent() {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
               <div className="relative">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Label htmlFor="search-portfolio" className="cursor-help">
-                      Search
-                    </Label>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Search by startup name, sector, or tags.</p>
-                  </TooltipContent>
-                </Tooltip>
+                <Label htmlFor="search-portfolio">Search</Label>
                 <Search className="absolute left-3 top-9 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search-portfolio"
@@ -303,78 +203,48 @@ export function PortfolioContent() {
                 />
               </div>
               <div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Label htmlFor="filter-sector" className="cursor-help">
-                      Sector
-                    </Label>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Filter by industry sector.</p>
-                  </TooltipContent>
-                </Tooltip>
+                <Label htmlFor="filter-sector">Sector</Label>
                 <Select value={filters.sector} onValueChange={(v) => handleFilterChange("sector", v)}>
-                  {" "}
                   <SelectTrigger id="filter-sector">
                     <SelectValue />
-                  </SelectTrigger>{" "}
+                  </SelectTrigger>
                   <SelectContent>
-                    {sectors.map((s) => (
+                    {SECTORS.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
                       </SelectItem>
                     ))}
-                  </SelectContent>{" "}
+                  </SelectContent>
                 </Select>
               </div>
               <div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Label htmlFor="filter-stage" className="cursor-help">
-                      Stage
-                    </Label>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Filter by startup stage.</p>
-                  </TooltipContent>
-                </Tooltip>
+                <Label htmlFor="filter-stage">Stage</Label>
                 <Select value={filters.stage} onValueChange={(v) => handleFilterChange("stage", v)}>
-                  {" "}
                   <SelectTrigger id="filter-stage">
                     <SelectValue />
-                  </SelectTrigger>{" "}
+                  </SelectTrigger>
                   <SelectContent>
-                    {stages.map((s) => (
+                    {STAGES.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
                       </SelectItem>
                     ))}
-                  </SelectContent>{" "}
+                  </SelectContent>
                 </Select>
               </div>
               <div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Label htmlFor="filter-funding" className="cursor-help">
-                      Funding Status
-                    </Label>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Filter by funding status.</p>
-                  </TooltipContent>
-                </Tooltip>
+                <Label htmlFor="filter-funding">Funding Status</Label>
                 <Select value={filters.fundingStatus} onValueChange={(v) => handleFilterChange("fundingStatus", v)}>
-                  {" "}
                   <SelectTrigger id="filter-funding">
                     <SelectValue />
-                  </SelectTrigger>{" "}
+                  </SelectTrigger>
                   <SelectContent>
-                    {fundingStatuses.map((s) => (
+                    {FUNDING_STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
                       </SelectItem>
                     ))}
-                  </SelectContent>{" "}
+                  </SelectContent>
                 </Select>
               </div>
             </div>
@@ -382,7 +252,7 @@ export function PortfolioContent() {
         </Card>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <Card className="xl:col-span-1">
+          <Card className="xl:col-span-1 border-muted shadow-sm hover:shadow-md transition-shadow duration-200">
             <CardHeader>
               <CardTitle>Funding Status Distribution</CardTitle>
               <CardDescription>Overview of portfolio funding stages.</CardDescription>
@@ -390,11 +260,15 @@ export function PortfolioContent() {
             <CardContent>
               <ChartContainer config={{}} className="h-[300px] w-full">
                 <ResponsiveContainer>
-                  <BarChart data={fundingStatusCounts} layout="vertical" margin={{ left: 20, right: 10 }}>
+                  <BarChart
+                    data={fundingStatusCounts}
+                    layout="vertical"
+                    margin={{ left: 20, right: 10, top: 5, bottom: 5 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                     <XAxis type="number" />
                     <YAxis type="category" dataKey="name" width={80} interval={0} fontSize={12} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <RechartsTooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="value" name="Startups" radius={[0, 4, 4, 0]}>
                       {fundingStatusCounts.map((entry) => (
                         <Cell key={`cell-${entry.name}`} fill={entry.fill} />
@@ -406,7 +280,7 @@ export function PortfolioContent() {
             </CardContent>
           </Card>
 
-          <Card className="xl:col-span-2">
+          <Card className="xl:col-span-2 border-muted shadow-sm hover:shadow-md transition-shadow duration-200">
             <CardHeader>
               <CardTitle>Portfolio Overview</CardTitle>
               <CardDescription>
@@ -417,54 +291,12 @@ export function PortfolioContent() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">Startup</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Startup name and tags.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead>
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">Sector</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Industry sector.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead>
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">Stage</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Current stage.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead>
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">Funding</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Funding status.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-right">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">MRR ({selectedCurrency.code})</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Monthly Recurring Revenue.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                    <TableHead className="text-right">
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-help">Health</TooltipTrigger>
-                        <TooltipContent>
-                          <p>Overall health score.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
+                    <TableHead>Startup</TableHead>
+                    <TableHead>Sector</TableHead>
+                    <TableHead>Stage</TableHead>
+                    <TableHead>Funding</TableHead>
+                    <TableHead className="text-right">MRR ({selectedCurrency.code})</TableHead>
+                    <TableHead className="text-right">Health</TableHead>
                     <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -496,6 +328,7 @@ export function PortfolioContent() {
                         <TableCell>
                           <Badge
                             className={cn(
+                              "text-xs",
                               startup.fundingStatus === "Funded" && "status-funded",
                               startup.fundingStatus === "Seeking" && "status-pending",
                               startup.fundingStatus === "Bootstrapped" && "status-inactive",
@@ -514,7 +347,10 @@ export function PortfolioContent() {
                                   ? "outline"
                                   : "destructive"
                             }
-                            className={cn(startup.healthScore > 80 && "bg-charting-positive/80 text-white")}
+                            className={cn(
+                              startup.healthScore > 80 && "bg-charting-positive text-charting-positive-foreground",
+                              startup.healthScore <= 60 && "bg-charting-negative text-charting-negative-foreground",
+                            )}
                           >
                             {startup.healthScore}%
                           </Badge>
@@ -533,8 +369,7 @@ export function PortfolioContent() {
                                   viewStartupDetails(startup.id)
                                 }}
                               >
-                                {" "}
-                                <Eye className="mr-2 h-4 w-4" /> View Details{" "}
+                                <Eye className="mr-2 h-4 w-4" /> View Details
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={(e) => {
@@ -542,18 +377,20 @@ export function PortfolioContent() {
                                   router.push(`/portfolio/${startup.id}/edit`)
                                 }}
                               >
-                                {" "}
-                                <Edit3 className="mr-2 h-4 w-4" /> Edit Startup{" "}
+                                <Edit3 className="mr-2 h-4 w-4" /> Edit Startup
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-red-600"
+                                className="text-red-600 hover:!text-red-600 dark:hover:!text-red-500"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  toast({ title: `Deleting ${startup.name} (Simulated)`, variant: "destructive" })
+                                  toast({
+                                    title: `Simulated Deletion: ${startup.name}`,
+                                    description: "This is a UI demonstration.",
+                                    variant: "destructive",
+                                  })
                                 }}
                               >
-                                {" "}
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete{" "}
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -563,7 +400,7 @@ export function PortfolioContent() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={7} className="h-24 text-center">
-                        No startups found matching your criteria.
+                        No startups found.
                       </TableCell>
                     </TableRow>
                   )}

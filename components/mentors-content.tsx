@@ -131,10 +131,10 @@ export function MentorsContent() {
 
   return (
     <TooltipProvider>
-      <div className="space-y-6">
+      <div className="space-y-8 lg:space-y-10 p-4 md:p-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-jpmc-darkblue dark:text-jpmc-lightblue">Mentor Network</h1>
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">Mentor Network</h1>
             <p className="text-muted-foreground">Discover and connect with experienced industry mentors.</p>
           </div>
           <Button onClick={handleAddNewMentor} className="w-full sm:w-auto">
@@ -223,7 +223,10 @@ export function MentorsContent() {
         {filteredMentors.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredMentors.map((mentor) => (
-              <Card key={mentor.id} className="flex flex-col hover:shadow-lg transition-shadow duration-200">
+              <Card
+                key={mentor.id}
+                className="border flex flex-col hover:shadow-xl transition-shadow duration-300 ease-in-out"
+              >
                 <CardHeader className="flex flex-row items-start gap-4 space-y-0 p-4">
                   <Avatar className="h-16 w-16 border-2 border-primary">
                     <AvatarImage src={mentor.avatarUrl || "/placeholder.svg"} alt={mentor.name} />
@@ -235,8 +238,8 @@ export function MentorsContent() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <CardTitle className="text-lg">{mentor.name}</CardTitle>
-                    <CardDescription className="text-xs">{mentor.title}</CardDescription>
+                    <CardTitle className="text-xl font-semibold">{mentor.name}</CardTitle>
+                    <CardDescription className="text-sm text-muted-foreground">{mentor.title}</CardDescription>
                     <div className="mt-1 flex items-center text-xs">
                       <Tooltip>
                         <TooltipTrigger asChild>

@@ -20,17 +20,17 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        geist: ["Geist", "system-ui", "sans-serif"],
+        geist: ["var(--font-geist)", "system-ui", "sans-serif"], // Use CSS variable
         "ibm-plex-mono": ["IBM Plex Mono", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
+        ring: "hsl(var(--ring))", // Ring color for focus states
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))", // JPMC Blue
+          DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
@@ -57,6 +57,9 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // JPMC specific colors (can be used for branding accents)
+        "jpmc-brand-blue": "hsl(210, 100%, 35%)", // Original JPMC Blue
+        "jpmc-brand-darkblue": "hsl(210, 100%, 25%)",
         jpmc: {
           blue: "hsl(var(--primary))", // Maintained for consistency
           darkblue: "hsl(210, 100%, 25%)", // Darker shade
@@ -77,9 +80,23 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        // Apple-like rounded corners
+        xl: "calc(var(--radius) + 4px)", // For larger elements like modals
+        lg: "var(--radius)", // Default for cards, buttons
+        md: "calc(var(--radius) - 4px)", // Slightly less for smaller elements
+        sm: "calc(var(--radius) - 8px)", // For very small elements like tags
+      },
+      fontSize: {
+        // Define a clear typographic scale
+        xs: ["0.75rem", { lineHeight: "1rem" }], // 12px
+        sm: ["0.875rem", { lineHeight: "1.25rem" }], // 14px
+        base: ["1rem", { lineHeight: "1.5rem" }], // 16px
+        lg: ["1.125rem", { lineHeight: "1.75rem" }], // 18px
+        xl: ["1.25rem", { lineHeight: "1.75rem" }], // 20px
+        "2xl": ["1.5rem", { lineHeight: "2rem" }], // 24px
+        "3xl": ["1.875rem", { lineHeight: "2.25rem" }], // 30px
+        "4xl": ["2.25rem", { lineHeight: "2.5rem" }], // 36px
+        "5xl": ["3rem", { lineHeight: "1.1" }], // 48px
       },
       keyframes: {
         "accordion-down": {

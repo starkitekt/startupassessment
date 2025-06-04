@@ -155,7 +155,7 @@ export function AssessmentContent() {
 
   return (
     <TooltipProvider>
-      <div className="space-y-6">
+      <div className="space-y-8 lg:space-y-10 p-4 md:p-8">
         {newAssessmentInfo && (
           <Alert variant="default" className="bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-700">
             <AlertCircle className="h-4 w-4 !text-green-600 dark:!text-green-400" />
@@ -176,7 +176,7 @@ export function AssessmentContent() {
         )}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-jpmc-darkblue dark:text-jpmc-lightblue">Manage Assessments</h1>
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">Manage Assessments</h1>
             <p className="text-muted-foreground">Track and manage all startup assessment processes.</p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
@@ -198,7 +198,7 @@ export function AssessmentContent() {
 
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center text-xl">
+            <CardTitle className="flex items-center text-lg font-semibold">
               <Filter className="mr-2 h-5 w-5 text-jpmc-blue" /> Filters
             </CardTitle>
           </CardHeader>
@@ -272,7 +272,7 @@ export function AssessmentContent() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Assessment Pipeline</CardTitle>
+            <CardTitle className="text-xl font-semibold">Assessment Pipeline</CardTitle>
             <CardDescription>
               Displaying {filteredAssessments.length} of {mockAssessments.length} assessments.
             </CardDescription>
