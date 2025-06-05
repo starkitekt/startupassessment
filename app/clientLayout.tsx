@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-// Inter font import is removed as it's handled in RootLayout
+import { useEffect } from "react"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SideNavigation } from "@/components/side-navigation"
 import { Toaster } from "@/components/ui/toaster"
@@ -10,20 +10,33 @@ import { cn } from "@/lib/utils"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 import { usePathname } from "next/navigation"
 
-// Inter font initialization is removed
-
 function AppContent({ children }: { children: React.ReactNode }) {
   const { selectedCountry, isExchangeRateLoading } = useGlobalSettings()
   const pathname = usePathname()
 
+  // Global keyboard shortcut for search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault()
+        // Trigger search modal - this would be handled by the SideNavigation component
+        const searchButton = document.querySelector("[data-search-trigger]") as HTMLButtonElement
+        if (searchButton) {
+          searchButton.click()
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [])
+
   return (
-    // The outermost div with inter.className and body styles is removed.
-    // ThemeProvider is now the top-level wrapper from this component.
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <SideNavigation />
-      <div className="md:pl-72 flex flex-col flex-1">
-        {" "}
-        {/* This div structures the content area beside the sidebar */}
+      {/* Main content with left margin for fixed sidebar */}
+      <div className="md:ml-16 flex flex-col flex-1 min-h-screen">
+        {/* Informational banner for country selection and loading state */}
         {(selectedCountry || isExchangeRateLoading) && (
           <div
             className={cn(
@@ -37,7 +50,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
           </div>
         )}
         <main className="flex-grow container mx-auto px-4 py-6 max-w-screen-2xl">
-          <div className="mt-12 md:mt-0">{pathname !== "/" && <Breadcrumbs />}</div>
+          {/* Add top margin to account for mobile menu button */}
+          <div className="mt-16 md:mt-4">{pathname !== "/" && <Breadcrumbs />}</div>
           {children}
         </main>
         <Toaster />
