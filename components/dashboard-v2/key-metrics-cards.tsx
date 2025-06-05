@@ -33,19 +33,19 @@ export function KeyMetricsCards({ metrics }: KeyMetricsCardsProps) {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <CardTitle className="text-base font-medium cursor-help">{metric.title}</CardTitle>
+                  <CardTitle className="card-title cursor-help">{metric.title}</CardTitle>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{metric.tooltip}</p>
+                  <p className="text-description">{metric.tooltip}</p>
                 </TooltipContent>
               </Tooltip>
               <metric.icon className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-numerical">
+              <div className="text-metric">
                 {metric.valueAsNumber ? formatCurrency(metric.valueAsNumber) : metric.value}
               </div>
-              <p className={cn("text-xs text-muted-foreground flex items-center", metric.trendColor)}>
+              <p className={cn("text-caption flex items-center", metric.trendColor)}>
                 <TrendingUp className="h-3 w-3 mr-1" /> {metric.trend}
               </p>
             </CardContent>

@@ -23,8 +23,8 @@ interface MobileNavMenuProps {
 }
 
 export function MobileNavMenu({
-  mainNavItems,
-  resourcesNavItems,
+  mainNavItems = [],
+  resourcesNavItems = [],
   userDisplayName,
   userEmail,
   onSignOut,
@@ -35,6 +35,10 @@ export function MobileNavMenu({
   userProfileComponent,
 }: MobileNavMenuProps) {
   const [isOpen, setIsOpen] = React.useState(false)
+
+  // Ensure arrays are defined with fallbacks
+  const safeMainNavItems = mainNavItems || []
+  const safeResourcesNavItems = resourcesNavItems || []
 
   const createNavLink = (item: NavItem, isSubItem = false) => (
     <Link
@@ -82,7 +86,7 @@ export function MobileNavMenu({
           {searchComponent && <div className="mb-4">{searchComponent}</div>}
 
           <Accordion type="multiple" className="w-full">
-            {mainNavItems.map((item) =>
+            {safeMainNavItems.map((item) =>
               item.children && item.children.length > 0 ? (
                 <AccordionItem value={item.name} key={item.name} className="border-b-0">
                   <AccordionTrigger
@@ -104,7 +108,9 @@ export function MobileNavMenu({
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pb-1 pl-0">
-                    <div className="ml-0 space-y-1">{item.children.map((child) => createNavLink(child, true))}</div>
+                    <div className="ml-0 space-y-1">
+                      {(item.children || []).map((child) => createNavLink(child, true))}
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               ) : (
@@ -113,29 +119,30 @@ export function MobileNavMenu({
             )}
 
             {/* Resources Section */}
-            <AccordionItem value="resources" className="border-b-0">
-              <AccordionTrigger
-                className={cn(
-                  "flex items-center p-3 rounded-md text-base font-medium transition-colors hover:no-underline hover:bg-muted",
-                  resourcesNavItems.some(
-                    (child) =>
-                      child.href &&
-                      (currentPathname === child.href ||
-                        (child.href !== "/" && currentPathname.startsWith(child.href))),
-                  )
-                    ? "text-primary"
-                    : "text-foreground/80",
-                )}
-              >
-                <div className="flex items-center">
-                  {/* You can add a generic icon for Resources if needed */}
-                  Resources
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-1 pl-0">
-                <div className="ml-0 space-y-1">{resourcesNavItems.map((child) => createNavLink(child, true))}</div>
-              </AccordionContent>
-            </AccordionItem>
+            {safeResourcesNavItems.length > 0 && (
+              <AccordionItem value="resources" className="border-b-0">
+                <AccordionTrigger
+                  className={cn(
+                    "flex items-center p-3 rounded-md text-base font-medium transition-colors hover:no-underline hover:bg-muted",
+                    safeResourcesNavItems.some(
+                      (child) =>
+                        child.href &&
+                        (currentPathname === child.href ||
+                          (child.href !== "/" && currentPathname.startsWith(child.href))),
+                    )
+                      ? "text-primary"
+                      : "text-foreground/80",
+                  )}
+                >
+                  <div className="flex items-center">Resources</div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-1 pl-0">
+                  <div className="ml-0 space-y-1">
+                    {safeResourcesNavItems.map((child) => createNavLink(child, true))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
           </Accordion>
 
           {globalSettingsComponent && <div className="mt-4 pt-4 border-t">{globalSettingsComponent}</div>}

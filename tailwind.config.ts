@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss"
 
 const config: Config = {
-  darkMode: ["class"], // This enables toggling dark mode via a class on the HTML element
+  darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -20,8 +20,23 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-mono)", "monospace"],
+        // Header font - Neue Montreal
+        "neue-montreal": ["var(--font-neue-montreal)", "system-ui", "sans-serif"],
+        // Description/body font - Geist
+        geist: ["var(--font-geist)", "system-ui", "sans-serif"],
+        // Number font - IBM Plex Mono
+        "ibm-plex-mono": ["var(--font-ibm-plex-mono)", "monospace"],
+        // Default sans fallback
+        sans: ["var(--font-geist)", "system-ui", "sans-serif"],
+        mono: ["var(--font-ibm-plex-mono)", "monospace"],
+      },
+      letterSpacing: {
+        // Custom kerning values
+        header: "-0.05em", // -5% kerning for headers
+        description: "-0.03em", // -3% kerning for descriptions
+        tight: "-0.025em",
+        normal: "0em",
+        wide: "0.025em",
       },
       colors: {
         border: "hsl(var(--border))",
@@ -57,10 +72,8 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // JPMC specific colors
-        "jpmc-brand-blue": "hsl(210, 100%, 45%)", // Maintained for consistency if needed
-        "jpmc-brand-darkblue": "hsl(210, 100%, 35%)", // Used in gradient
-        // Chart-specific color palette
+        "jpmc-brand-blue": "hsl(210, 100%, 45%)",
+        "jpmc-brand-darkblue": "hsl(210, 100%, 35%)",
         chart: {
           "1": "hsl(var(--chart-1))",
           "2": "hsl(var(--chart-2))",
@@ -78,6 +91,7 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontSize: {
+        // Responsive typography scale
         xs: ["0.75rem", { lineHeight: "1rem" }],
         sm: ["0.875rem", { lineHeight: "1.25rem" }],
         base: ["1rem", { lineHeight: "1.5rem" }],
@@ -87,6 +101,11 @@ const config: Config = {
         "3xl": ["1.875rem", { lineHeight: "2.25rem" }],
         "4xl": ["2.25rem", { lineHeight: "2.5rem" }],
         "5xl": ["3rem", { lineHeight: "1.1" }],
+        "6xl": ["3.75rem", { lineHeight: "1" }],
+        // Mobile-specific sizes
+        "xs-mobile": ["0.6875rem", { lineHeight: "0.875rem" }],
+        "sm-mobile": ["0.8125rem", { lineHeight: "1.125rem" }],
+        "base-mobile": ["0.9375rem", { lineHeight: "1.375rem" }],
       },
       keyframes: {
         "accordion-down": {
