@@ -1,3 +1,5 @@
+"use client" // Ensure client component for interactivity
+
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -5,12 +7,36 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BookOpen, CheckCircle, ClipboardCheck, FileText, Gavel, ShieldCheck, ArrowRight } from "lucide-react"
+import {
+  BookOpen,
+  CheckCircle,
+  ClipboardCheck,
+  FileText,
+  Gavel,
+  ShieldCheck,
+  ArrowRight,
+  TrendingUp,
+  ListChecks,
+} from "lucide-react"
 import Link from "next/link"
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts"
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 
 const mockComplianceOverview = {
-  overallStatus: "Good", // Good, Needs Attention, Critical
-  overallProgress: 85, // Percentage
+  overallStatus: "Good",
+  overallProgress: 85,
   keyAreas: [
     {
       id: "data_privacy",
@@ -18,6 +44,8 @@ const mockComplianceOverview = {
       status: "Compliant",
       progress: 100,
       lastReview: "2025-05-20",
+      riskLevel: "Low",
+      relatedAudits: 2,
     },
     {
       id: "financial_reporting",
@@ -25,13 +53,17 @@ const mockComplianceOverview = {
       status: "Partially Compliant",
       progress: 75,
       lastReview: "2025-04-10",
+      riskLevel: "Medium",
+      relatedAudits: 1,
     },
     {
       id: "startup_onboarding",
-      name: "Startup Onboarding Due Diligence",
+      name: "Startup Onboarding DD",
       status: "Compliant",
       progress: 100,
       lastReview: "2025-06-01",
+      riskLevel: "Low",
+      relatedAudits: 3,
     },
     {
       id: "ip_protection",
@@ -39,6 +71,8 @@ const mockComplianceOverview = {
       status: "Needs Review",
       progress: 50,
       lastReview: "2025-03-15",
+      riskLevel: "High",
+      relatedAudits: 0,
     },
   ],
 }
@@ -50,13 +84,15 @@ const mockPendingTasks = [
     dueDate: "2025-07-10",
     priority: "High",
     relatedArea: "Data Privacy",
+    assignedTo: "All Employees",
   },
   {
     id: "task002",
-    title: "Submit Q2 Financial Attestation",
+    title: "Submit Q2 Financial Attestation for Innovatech",
     dueDate: "2025-07-15",
     priority: "Medium",
     relatedArea: "Financial Reporting",
+    assignedTo: "Finance Team",
   },
   {
     id: "task003",
@@ -64,6 +100,7 @@ const mockPendingTasks = [
     dueDate: "2025-07-30",
     priority: "Low",
     relatedArea: "IP Protection",
+    assignedTo: "R&D Department",
   },
 ]
 
@@ -74,31 +111,83 @@ const mockPolicies = [
     version: "v3.1",
     lastUpdated: "2025-06-15",
     status: "Active",
+    category: "Data Management",
   },
-  { id: "pol002", name: "Code of Conduct", version: "v2.0", lastUpdated: "2025-01-20", status: "Active" },
+  {
+    id: "pol002",
+    name: "Code of Conduct",
+    version: "v2.0",
+    lastUpdated: "2025-01-20",
+    status: "Active",
+    category: "Ethics",
+  },
   {
     id: "pol003",
     name: "Financial Reporting Guidelines",
     version: "v1.5",
     lastUpdated: "2025-03-01",
     status: "Active",
+    category: "Finance",
+  },
+  {
+    id: "pol004",
+    name: "Incubation Program Agreement",
+    version: "v4.2",
+    lastUpdated: "2025-05-01",
+    status: "Active",
+    category: "Legal",
   },
 ]
 
+const complianceStatusChartData = mockComplianceOverview.keyAreas.map((area, index) => ({
+  name: area.name.split(" (")[0], // Shorter name for chart
+  value: area.progress,
+  fill: `hsl(var(--chart-${(index % 5) + 1}))`, // Cycle through chart colors
+}))
+
+const taskPriorityChartData = [
+  {
+    name: "High",
+    value: mockPendingTasks.filter((t) => t.priority === "High").length,
+    fill: "hsl(var(--chart-negative))",
+  },
+  {
+    name: "Medium",
+    value: mockPendingTasks.filter((t) => t.priority === "Medium").length,
+    fill: "hsl(var(--chart-3))",
+  },
+  {
+    name: "Low",
+    value: mockPendingTasks.filter((t) => t.priority === "Low").length,
+    fill: "hsl(var(--chart-positive))",
+  },
+]
+
+const chartConfig = {
+  value: { label: "Progress" },
+  tasks: { label: "Tasks" },
+}
+
 export default function CompliancePage() {
   const getStatusColor = (status: string) => {
-    if (status === "Compliant") return "bg-green-100 text-green-700"
-    if (status === "Partially Compliant" || status === "Needs Review") return "bg-yellow-100 text-yellow-700"
-    return "bg-red-100 text-red-700" // Critical or other
+    if (status === "Compliant") return "bg-green-500/20 text-green-400 border-green-500/30"
+    if (status === "Partially Compliant") return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+    if (status === "Needs Review") return "bg-amber-500/20 text-amber-400 border-amber-500/30"
+    return "bg-red-500/20 text-red-400 border-red-500/30" // Critical or other
+  }
+  const getRiskColor = (risk: string) => {
+    if (risk === "Low") return "text-green-400"
+    if (risk === "Medium") return "text-yellow-400"
+    return "text-red-400" // High
   }
   const getPriorityColor = (priority: string) => {
-    if (priority === "High") return "text-red-600"
-    if (priority === "Medium") return "text-yellow-600"
-    return "text-green-600" // Low
+    if (priority === "High") return "text-red-400"
+    if (priority === "Medium") return "text-yellow-400"
+    return "text-green-400"
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-4 md:p-6 lg:p-8">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl flex items-center gap-2">
@@ -110,16 +199,85 @@ export default function CompliancePage() {
         </div>
         <Button asChild variant="outline">
           <Link href="/audits">
-            {" "}
-            {/* Link to Audits page */}
             <ShieldCheck className="mr-2 h-4 w-4" /> View Audit Logs
           </Link>
         </Button>
       </header>
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" /> Compliance Progress by Area
+            </CardTitle>
+            <CardDescription>Overview of compliance levels across key regulatory areas.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px]">
+            <ChartContainer config={chartConfig} className="w-full h-full">
+              <ResponsiveContainer>
+                <BarChart data={complianceStatusChartData} layout="vertical" margin={{ left: 10, right: 30 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={150}
+                    interval={0}
+                    stroke="hsl(var(--muted-foreground))"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <RechartsTooltip
+                    content={<ChartTooltipContent />}
+                    cursor={{ fill: "hsl(var(--muted))" }}
+                    formatter={(value) => `${value}%`}
+                  />
+                  <Bar dataKey="value" name="Progress" radius={[0, 4, 4, 0]}>
+                    {complianceStatusChartData.map((entry) => (
+                      <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ListChecks className="h-5 w-5 text-primary" /> Pending Tasks by Priority
+            </CardTitle>
+            <CardDescription>Distribution of outstanding compliance tasks.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px] flex items-center justify-center">
+            <ChartContainer config={chartConfig} className="w-full h-full max-h-[250px]">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie
+                    data={taskPriorityChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    labelLine={false}
+                    label={({ name, percent, value }) => `${name} (${value})`}
+                  >
+                    {taskPriorityChartData.map((entry) => (
+                      <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip content={<ChartTooltipContent />} />
+                  <Legend wrapperStyle={{ fontSize: "12px" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs defaultValue="dashboard">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-6">
-          <TabsTrigger value="dashboard">Compliance Dashboard</TabsTrigger>
+          <TabsTrigger value="dashboard">Key Compliance Areas</TabsTrigger>
           <TabsTrigger value="my-tasks">My Compliance Tasks</TabsTrigger>
           <TabsTrigger value="policies">Policies & Procedures</TabsTrigger>
         </TabsList>
@@ -128,44 +286,50 @@ export default function CompliancePage() {
           <Card>
             <CardHeader>
               <CardTitle>Overall Compliance Status</CardTitle>
-              <div className="flex items-center gap-2 mt-1">
-                <Progress value={mockComplianceOverview.overallProgress} className="w-full h-3" />
-                <span className="text-lg font-semibold text-primary">{mockComplianceOverview.overallProgress}%</span>
+              <div className="flex items-center gap-3 mt-1">
+                <Progress
+                  value={mockComplianceOverview.overallProgress}
+                  className="w-full h-3 bg-muted"
+                  indicatorClassName="bg-primary"
+                />
+                <span className="text-xl font-bold text-primary">{mockComplianceOverview.overallProgress}%</span>
               </div>
               <CardDescription>
                 Current status:{" "}
-                <span
-                  className={cn(
-                    "font-semibold",
-                    getStatusColor(mockComplianceOverview.overallStatus)
-                      .replace("bg-", "text-")
-                      .replace("-100", "-600"),
-                  )}
-                >
+                <span className={cn("font-semibold", getRiskColor(mockComplianceOverview.overallStatus))}>
                   {mockComplianceOverview.overallStatus}
                 </span>
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <h3 className="text-lg font-semibold mb-3">Key Compliance Areas</h3>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-6 md:grid-cols-2">
                 {mockComplianceOverview.keyAreas.map((area) => (
-                  <Card key={area.id} className="bg-muted/20">
+                  <Card
+                    key={area.id}
+                    className="bg-card border border-border shadow-sm hover:shadow-md transition-shadow"
+                  >
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-md flex items-center justify-between">
-                        {area.name}
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-md">{area.name}</CardTitle>
                         <Badge variant="outline" className={cn("text-xs", getStatusColor(area.status))}>
                           {area.status}
                         </Badge>
-                      </CardTitle>
+                      </div>
                     </CardHeader>
-                    <CardContent className="space-y-1 text-sm">
-                      <Progress value={area.progress} className="h-1.5 mb-2" />
-                      <p>Last Reviewed: {area.lastReview}</p>
-                      <Button variant="link" size="sm" className="p-0 h-auto" asChild>
+                    <CardContent className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Progress value={area.progress} className="h-1.5 bg-muted" />
+                        <span>{area.progress}%</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Last Reviewed: {area.lastReview}</span>
+                        <span>
+                          Risk: <span className={getRiskColor(area.riskLevel)}>{area.riskLevel}</span>
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Related Audits: {area.relatedAudits}</p>
+                      <Button variant="link" size="sm" className="p-0 h-auto text-primary" asChild>
                         <Link href={`/compliance/areas/${area.id}`}>
-                          {" "}
-                          {/* Placeholder link */}
                           View Details & Actions <ArrowRight className="ml-1 h-3 w-3" />
                         </Link>
                       </Button>
@@ -190,6 +354,7 @@ export default function CompliancePage() {
                     <TableRow>
                       <TableHead>Task</TableHead>
                       <TableHead>Related Area</TableHead>
+                      <TableHead>Assigned To</TableHead>
                       <TableHead>Due Date</TableHead>
                       <TableHead>Priority</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -200,15 +365,24 @@ export default function CompliancePage() {
                       <TableRow key={task.id}>
                         <TableCell className="font-medium">{task.title}</TableCell>
                         <TableCell>{task.relatedArea}</TableCell>
-                        <TableCell>{task.dueDate}</TableCell>
+                        <TableCell>{task.assignedTo}</TableCell>
+                        <TableCell>{new Date(task.dueDate).toLocaleDateString()}</TableCell>
                         <TableCell>
-                          <span className={cn("font-semibold", getPriorityColor(task.priority))}>{task.priority}</span>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "font-semibold border-opacity-50",
+                              task.priority === "High" && "border-red-500 text-red-400",
+                              task.priority === "Medium" && "border-yellow-500 text-yellow-400",
+                              task.priority === "Low" && "border-green-500 text-green-400",
+                            )}
+                          >
+                            {task.priority}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="default" size="sm" asChild>
+                          <Button variant="default" size="sm" asChild className="jpmc-gradient">
                             <Link href={`/compliance/tasks/${task.id}`}>
-                              {" "}
-                              {/* Placeholder link */}
                               <CheckCircle className="mr-1.5 h-3.5 w-3.5" /> Complete Task
                             </Link>
                           </Button>
@@ -218,9 +392,9 @@ export default function CompliancePage() {
                   </TableBody>
                 </Table>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <ClipboardCheck className="mx-auto h-12 w-12 mb-2" />
-                  <p>No pending compliance tasks. Well done!</p>
+                <div className="text-center py-12 text-muted-foreground">
+                  <ClipboardCheck className="mx-auto h-12 w-12 mb-3" />
+                  <p className="text-lg">No pending compliance tasks. Well done!</p>
                 </div>
               )}
             </CardContent>
@@ -239,6 +413,7 @@ export default function CompliancePage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Policy Name</TableHead>
+                      <TableHead>Category</TableHead>
                       <TableHead>Version</TableHead>
                       <TableHead>Last Updated</TableHead>
                       <TableHead>Status</TableHead>
@@ -249,12 +424,13 @@ export default function CompliancePage() {
                     {mockPolicies.map((policy) => (
                       <TableRow key={policy.id}>
                         <TableCell className="font-medium">{policy.name}</TableCell>
+                        <TableCell>{policy.category}</TableCell>
                         <TableCell>{policy.version}</TableCell>
-                        <TableCell>{policy.lastUpdated}</TableCell>
+                        <TableCell>{new Date(policy.lastUpdated).toLocaleDateString()}</TableCell>
                         <TableCell>
                           <Badge
                             variant={policy.status === "Active" ? "default" : "outline"}
-                            className={policy.status === "Active" ? "bg-green-600 hover:bg-green-700" : ""}
+                            className={cn(policy.status === "Active" && "bg-green-600/80 text-primary-foreground")}
                           >
                             {policy.status}
                           </Badge>
@@ -262,8 +438,6 @@ export default function CompliancePage() {
                         <TableCell className="text-right">
                           <Button variant="outline" size="sm" asChild>
                             <Link href={`/compliance/policies/${policy.id}`}>
-                              {" "}
-                              {/* Placeholder link */}
                               <BookOpen className="mr-1.5 h-3.5 w-3.5" /> View Policy
                             </Link>
                           </Button>
@@ -273,9 +447,9 @@ export default function CompliancePage() {
                   </TableBody>
                 </Table>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <FileText className="mx-auto h-12 w-12 mb-2" />
-                  <p>No policies found. Please check back later.</p>
+                <div className="text-center py-12 text-muted-foreground">
+                  <FileText className="mx-auto h-12 w-12 mb-3" />
+                  <p className="text-lg">No policies found. Please check back later.</p>
                 </div>
               )}
             </CardContent>

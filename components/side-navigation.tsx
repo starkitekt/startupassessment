@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -41,7 +41,6 @@ import {
   TrendingUp,
   Menu,
   X,
-  Scale,
   Zap,
   Gavel,
   Rocket,
@@ -68,7 +67,7 @@ const mainNavItems: SideNavItem[] = [
     description: "Overview and key metrics",
   },
   {
-    name: "Accelerator", // New
+    name: "Accelerator",
     href: "/accelerator",
     icon: Zap,
     description: "Manage accelerator programs",
@@ -76,15 +75,15 @@ const mainNavItems: SideNavItem[] = [
       { name: "Programs Overview", href: "/accelerator", icon: Rocket, description: "View all accelerator programs" },
       {
         name: "My Applications",
-        href: "/accelerator/applications",
+        href: "/accelerator/applications", // Placeholder, actual page might differ
         icon: FileText,
         description: "Track your applications",
       },
-      { name: "Active Cohorts", href: "/accelerator/cohorts", icon: Users, description: "Engage with active cohorts" },
+      { name: "Active Cohorts", href: "/accelerator/cohorts", icon: Users, description: "Engage with active cohorts" }, // Placeholder
     ],
   },
   {
-    name: "Compliance", // New
+    name: "Compliance",
     href: "/compliance",
     icon: Gavel,
     description: "Oversee compliance & regulations",
@@ -95,8 +94,13 @@ const mainNavItems: SideNavItem[] = [
         icon: ClipboardCheck,
         description: "Overall compliance status",
       },
-      { name: "Policies", href: "/compliance/policies", icon: BookOpen, description: "View company policies" },
-      { name: "My Compliance Tasks", href: "/compliance/tasks", icon: CheckCircle, description: "Your pending tasks" },
+      { name: "Policies", href: "/compliance/policies", icon: BookOpen, description: "View company policies" }, // Placeholder
+      {
+        name: "My Compliance Tasks",
+        href: "/compliance/tasks", // Placeholder
+        icon: CheckCircle,
+        description: "Your pending tasks",
+      },
     ],
   },
   {
@@ -151,17 +155,12 @@ const mainNavItems: SideNavItem[] = [
     name: "Audits",
     href: "/audits",
     icon: ShieldCheck,
-    description: "Audit management", // Simplified description
+    description: "Audit management",
   },
 ]
 
 const resourcesNavItems: SideNavItem[] = [
-  {
-    name: "Accelerator & Compliance Info",
-    href: "/accelerator-compliance",
-    icon: Scale, // This is the info page
-    description: "Details on programs and framework",
-  },
+  // 'Accelerator & Compliance Info' removed
   {
     name: "Knowledge Base",
     href: "/knowledge-base",
@@ -196,7 +195,7 @@ export function SideNavigation() {
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
 
   const flyoutTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const navItemRefs = useRef<Record<string, HTMLDivElement | null>>({}) // To store refs to nav items
+  const flyoutRef = useRef<HTMLDivElement>(null) // Ref for the flyout panel
 
   const clearFlyoutTimeout = useCallback(() => {
     if (flyoutTimeoutRef.current) {
@@ -209,9 +208,7 @@ export function SideNavigation() {
     clearFlyoutTimeout()
     flyoutTimeoutRef.current = setTimeout(() => {
       setIsFlyoutVisible(false)
-      // Do not reset activeFlyoutItemName here, let mouse leave from trigger handle it
-      // to prevent flicker if mouse re-enters trigger quickly.
-    }, 5000) // 5 seconds persistence
+    }, 5000)
   }, [clearFlyoutTimeout])
 
   const handleNavItemMouseEnter = (item: SideNavItem, event: React.MouseEvent<HTMLElement>) => {
@@ -222,32 +219,34 @@ export function SideNavigation() {
         top: rect.top,
         left: rect.right + 8,
       })
-      setActiveFlyoutItemName(item.name) // Set this first
-      setIsFlyoutVisible(true) // Then set this to trigger transition
+      setActiveFlyoutItemName(item.name)
+      setIsFlyoutVisible(true)
     } else {
       // If item has no children, ensure any existing flyout is hidden
-      if (isFlyoutVisible) {
-        // Only start close timer if a flyout was visible from another item
-        startFlyoutCloseTimer()
+      // but only if the mouse isn't moving towards an already open flyout
+      if (isFlyoutVisible && activeFlyoutItemName !== item.name) {
+        startFlyoutCloseTimer() // Start timer to close previous flyout
       }
-      setActiveFlyoutItemName(null) // No active flyout for items without children
+      // If not hovering over a flyout-triggering item, ensure no flyout is considered active
+      if (!(item.children && item.children.length > 0)) {
+        setActiveFlyoutItemName(null)
+      }
     }
   }
 
   const handleNavItemMouseLeave = (item: SideNavItem) => {
-    // Only start the timer if the mouse is not over the flyout itself
-    // and if the leaving item is the one that triggered the current flyout
-    if (activeFlyoutItemName === item.name) {
+    // Start timer only if the mouse is not over the flyout and the leaving item is the active one
+    if (activeFlyoutItemName === item.name && !flyoutRef.current?.matches(":hover")) {
       startFlyoutCloseTimer()
     }
   }
 
   const handleFlyoutMouseEnter = () => {
-    clearFlyoutTimeout() // User is interacting with the flyout, keep it open
+    clearFlyoutTimeout()
   }
 
   const handleFlyoutMouseLeave = () => {
-    startFlyoutCloseTimer() // User left the flyout, start timer to close
+    startFlyoutCloseTimer()
   }
 
   const handleFlyoutItemClick = () => {
@@ -256,6 +255,19 @@ export function SideNavigation() {
     setActiveFlyoutItemName(null)
     setIsMobileOpen(false)
   }
+
+  useEffect(() => {
+    // Add keydown listener for Esc key to close flyout
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isFlyoutVisible) {
+        handleFlyoutItemClick() // Use existing close logic
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [isFlyoutVisible])
 
   const handleSignOut = () => {
     toast({ title: "Logged Out", description: "You have been successfully logged out." })
@@ -266,7 +278,6 @@ export function SideNavigation() {
   const userEmail = "rajesh.k@example.com"
 
   const renderNavItem = (item: SideNavItem): React.JSX.Element => {
-    // An item is "active" if its path matches, OR if its flyout is currently visible and active.
     const isFlyoutTriggerActive = activeFlyoutItemName === item.name && isFlyoutVisible
     const isPathActive = item.href
       ? pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
@@ -276,12 +287,11 @@ export function SideNavigation() {
               child.href && (pathname === child.href || (child.href !== "/" && pathname.startsWith(child.href))),
           )) ||
         false
-
     const isActive = isPathActive || isFlyoutTriggerActive
 
     const commonItemClasses = cn(
       "flex items-center justify-center w-12 h-12 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-muted/80 group relative",
-      isActive ? "bg-primary text-primary-foreground shadow-sm" : "text-foreground/70 hover:text-foreground",
+      isActive ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground",
     )
 
     return (
@@ -289,10 +299,9 @@ export function SideNavigation() {
         <Tooltip>
           <TooltipTrigger asChild>
             <div
-              ref={(el) => (navItemRefs.current[item.name] = el)}
-              className="relative" // Ensure this div is the one getting mouse events
+              className="relative"
               onMouseEnter={(e) => handleNavItemMouseEnter(item, e)}
-              onMouseLeave={() => handleNavItemMouseLeave(item)} // Pass item to know which one is leaving
+              onMouseLeave={() => handleNavItemMouseLeave(item)}
             >
               {item.href && !item.children ? (
                 <Link
@@ -310,7 +319,10 @@ export function SideNavigation() {
                   onClick={() => {
                     if (item.href) router.push(item.href)
                     setIsMobileOpen(false)
-                    handleFlyoutItemClick()
+                    // If it has children, clicking the icon itself could also toggle the flyout or navigate to parent
+                    if (item.children && item.children.length > 0) {
+                      // No direct action, hover handles flyout. Or, could navigate to item.href if defined.
+                    }
                   }}
                   className={commonItemClasses}
                   aria-haspopup={!!(item.children && item.children.length > 0)}
@@ -321,9 +333,9 @@ export function SideNavigation() {
               )}
             </div>
           </TooltipTrigger>
-          <TooltipContent side="right" className="max-w-xs">
+          <TooltipContent side="right" className="max-w-xs bg-popover text-popover-foreground border-border shadow-lg">
             <div>
-              <p className="font-medium">{item.name}</p>
+              <p className="font-semibold">{item.name}</p>
               {item.description && <p className="text-xs text-muted-foreground mt-1">{item.description}</p>}
             </div>
           </TooltipContent>
@@ -336,7 +348,6 @@ export function SideNavigation() {
     mainNavItems.find((item) => item.name === activeFlyoutItemName) ||
     resourcesNavItems.find((item) => item.name === activeFlyoutItemName)
 
-  // Mobile navigation rendering (simplified, as flyouts are primarily desktop)
   const renderMobileNavItem = (item: SideNavItem, isSubItem = false): React.JSX.Element => {
     const isActive = item.href ? pathname.startsWith(item.href) : false
     return (
@@ -345,13 +356,13 @@ export function SideNavigation() {
           href={item.href || "#"}
           onClick={() => {
             setIsMobileOpen(false)
-            if (!item.children && item.href) router.push(item.href) // Navigate if no children
+            if (!item.children && item.href) router.push(item.href)
           }}
           className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
             isSubItem
-              ? "ml-4 text-foreground/60 hover:bg-muted/50 hover:text-foreground/80"
-              : "text-foreground/80 hover:bg-muted hover:text-foreground",
+              ? "ml-4 text-muted-foreground hover:bg-muted hover:text-foreground"
+              : "text-foreground hover:bg-muted",
             isActive && (isSubItem ? "bg-primary/10 text-primary" : "bg-primary text-primary-foreground"),
           )}
         >
@@ -367,25 +378,22 @@ export function SideNavigation() {
 
   return (
     <>
-      {/* Mobile Toggle Button */}
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-[60] md:hidden bg-card/80 backdrop-blur-sm border shadow-sm"
+        className="fixed top-4 left-4 z-[60] md:hidden bg-card/80 backdrop-blur-sm border shadow-md"
         onClick={() => setIsMobileOpen(!isMobileOpen)}
       >
         {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </Button>
 
-      {/* Mobile Backdrop */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 md:hidden"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 md:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
 
-      {/* Mobile Sidebar */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-[55] flex h-full w-72 flex-col border-r bg-card shadow-xl transition-transform duration-300 ease-in-out md:hidden",
@@ -436,7 +444,7 @@ export function SideNavigation() {
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-56 bg-popover text-popover-foreground border-border">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
@@ -450,7 +458,7 @@ export function SideNavigation() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" /> Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -458,9 +466,8 @@ export function SideNavigation() {
         </div>
       </aside>
 
-      {/* Desktop Fixed Sidebar */}
-      <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:h-full md:w-16 md:flex-col md:items-center md:gap-2 md:border-r md:bg-card md:py-4 md:shadow-sm">
-        <Link href="/" className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-muted/50">
+      <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:flex md:h-full md:w-16 md:flex-col md:items-center md:gap-1 md:border-r md:bg-card md:py-3 md:shadow-sm">
+        <Link href="/" className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-muted/50 mb-1">
           <div className="h-8 w-8 rounded-full jpmc-gradient flex items-center justify-center" />
         </Link>
         <TooltipProvider delayDuration={300}>
@@ -469,33 +476,41 @@ export function SideNavigation() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-12 w-12 rounded-lg hover:bg-muted/80"
+                className="h-12 w-12 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80"
                 onClick={() => setShowAdvancedSearch(true)}
                 data-search-trigger
               >
                 <Search className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right">
+            <TooltipContent side="right" className="bg-popover text-popover-foreground border-border shadow-lg">
               <p>Advanced Search (Ctrl+K)</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <div className="flex-grow flex flex-col items-center gap-2 w-full">
+        <div className="flex-grow flex flex-col items-center gap-1 w-full mt-1">
           {mainNavItems.map((item) => renderNavItem(item))}
         </div>
-        <div className="flex flex-col items-center gap-2 w-full mt-auto pt-2 border-t">
+        <div className="flex flex-col items-center gap-1 w-full mt-auto pt-1 border-t">
           {resourcesNavItems.map((item) => renderNavItem(item))}
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-12 w-12 rounded-lg hover:bg-muted/80">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-12 w-12 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                    >
                       <Globe className="h-5 w-5" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" side="right" className="w-52">
+                  <DropdownMenuContent
+                    align="start"
+                    side="right"
+                    className="w-52 bg-popover text-popover-foreground border-border"
+                  >
                     <DropdownMenuLabel>Global Settings</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Country</DropdownMenuLabel>
@@ -515,7 +530,7 @@ export function SideNavigation() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="bg-popover text-popover-foreground border-border shadow-lg">
                 <p>Global Settings</p>
                 <p className="text-xs text-muted-foreground">Country: {selectedCountry.code}</p>
                 <p className="text-xs text-muted-foreground">Currency: {selectedCurrency.code}</p>
@@ -534,7 +549,11 @@ export function SideNavigation() {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" side="right" className="w-56">
+                  <DropdownMenuContent
+                    align="end"
+                    side="right"
+                    className="w-56 bg-popover text-popover-foreground border-border"
+                  >
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
@@ -548,13 +567,13 @@ export function SideNavigation() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
                       <LogOut className="mr-2 h-4 w-4" /> Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="bg-popover text-popover-foreground border-border shadow-lg">
                 <p>{userDisplayName}</p>
                 <p className="text-xs text-muted-foreground">{userEmail}</p>
               </TooltipContent>
@@ -563,27 +582,31 @@ export function SideNavigation() {
         </div>
       </aside>
 
-      {/* Flyout Menu for Desktop */}
       {currentFlyoutData?.children && (
         <div
+          ref={flyoutRef}
           className={cn(
-            "hidden md:block fixed z-40 bg-card border rounded-lg shadow-xl p-2 min-w-[240px] transition-opacity duration-200 ease-in-out", // Adjusted min-width
-            isFlyoutVisible ? "opacity-100" : "opacity-0 pointer-events-none",
+            "hidden md:block fixed z-40 bg-popover border border-border rounded-lg shadow-xl p-2 min-w-[250px]", // Increased min-width
+            "data-[state=open]:animate-flyout-in data-[state=closed]:animate-flyout-out",
           )}
+          data-state={isFlyoutVisible ? "open" : "closed"}
           style={{
             top: flyoutPosition.top,
             left: flyoutPosition.left,
+            // Opacity and pointer-events are now handled by animation states if needed, or keep direct control:
+            // opacity: isFlyoutVisible ? 1 : 0,
+            // pointerEvents: isFlyoutVisible ? 'auto' : 'none',
           }}
           onMouseEnter={handleFlyoutMouseEnter}
           onMouseLeave={handleFlyoutMouseLeave}
         >
-          <div className="p-2 border-b mb-1">
-            <h4 className="font-semibold text-sm">{currentFlyoutData.name}</h4>
+          <div className="p-2 border-b border-border mb-1">
+            <h4 className="font-semibold text-sm text-popover-foreground">{currentFlyoutData.name}</h4>
             {currentFlyoutData.description && (
               <p className="text-xs text-muted-foreground mt-0.5">{currentFlyoutData.description}</p>
             )}
           </div>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {currentFlyoutData.children.map((child) => (
               <Link
                 key={child.name}
@@ -593,7 +616,7 @@ export function SideNavigation() {
                   "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors hover:bg-muted",
                   pathname === child.href
                     ? "bg-primary/10 text-primary font-medium"
-                    : "text-foreground/80 hover:text-foreground",
+                    : "text-popover-foreground/80 hover:text-popover-foreground",
                 )}
               >
                 <child.icon className="h-4 w-4 flex-shrink-0" />

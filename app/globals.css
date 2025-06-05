@@ -3,98 +3,71 @@
 @tailwind utilities;
 
 @layer base {
+  /* Light Mode (Default) Variables */
   :root {
-    /* Apple-inspired Light Theme Palette */
-    --background: 220 20% 97%; /* Off-white, very light gray */
-    --foreground: 220 10% 10%; /* Dark gray for text */
+    --background: 0 0% 100%; /* White */
+    --foreground: 240 10% 3.9%; /* Dark Gray for text */
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 210 100% 50%; /* Vibrant Blue */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
+    --secondary: 240 4.8% 95.9%; /* Very Light Gray */
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%; /* Softer Gray for muted text */
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 72.2% 50.6%; /* Red */
+    --destructive-foreground: 0 0% 98%; /* Light text on destructive */
+    --border: 240 5.9% 90%; /* Light Gray Border */
+    --input: 240 5.9% 90%;
+    --input-foreground: 240 10% 3.9%; /* Text color for input */
+    --ring: 210 100% 50%; /* Focus ring, same as primary */
+    --radius: 0.5rem;
 
-    --card: 220 0% 100%; /* White cards */
-    --card-foreground: 220 10% 10%;
-
-    --popover: 220 0% 100%;
-    --popover-foreground: 220 10% 10%;
-
-    --primary: 210 100% 45%; /* Brighter, Apple-like blue */
-    --primary-foreground: 210 0% 100%; /* White text on primary */
-
-    --secondary: 220 15% 90%; /* Light gray for secondary elements */
-    --secondary-foreground: 220 10% 25%; /* Darker gray text on secondary */
-
-    --muted: 220 15% 92%; /* Lighter gray for muted backgrounds */
-    --muted-foreground: 220 10% 45%; /* Softer gray for muted text */
-
-    --accent: 210 100% 50%; /* Can be same as primary or a variation */
-    --accent-foreground: 210 0% 100%;
-
-    --destructive: 0 72% 51%; /* Apple's red */
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 220 15% 88%; /* Softer borders */
-    --input: 220 15% 94%; /* Light input background */
-    --input-foreground: 220 10% 10%; /* Text color for input */
-    --ring: 210 100% 50%; /* Focus ring, same as accent */
-
-    --radius: 0.75rem; /* Default border radius, slightly more rounded */
-
-    /* JPMC Branding (use sparingly) */
-    --jpmc-brand-blue-hsl: 210 100% 35%;
-    --jpmc-brand-darkblue-hsl: 210 100% 25%;
-
-    /* Charting Palette (can be kept or refined) */
-    --chart-primary: 210 90% 50%;
-    --chart-secondary: 190 70% 45%;
-    --chart-accent1: 30 90% 55%;
-    --chart-accent2: 260 70% 65%;
-    --chart-accent3: 50 95% 60%;
-    --chart-positive: 130 60% 45%; /* Greener green */
-    --chart-negative: 0 70% 55%;
-    --chart-neutral: 220 10% 65%;
+    /* Light Chart Colors */
+    --chart-1: 210 100% 50%; /* Primary Blue */
+    --chart-2: 210 90% 65%; /* Lighter Blue */
+    --chart-3: 240 5% 60%; /* Mid Grey */
+    --chart-4: 180 70% 40%; /* Teal/Cyan Accent */
+    --chart-5: 270 70% 55%; /* Purple Accent */
+    --chart-positive: 140 60% 40%; /* Green */
+    --chart-negative: 0 70% 50%; /* Red */
   }
 
+  /* Dark Mode Variables */
   .dark {
-    /* Apple-inspired Dark Theme Palette */
-    --background: 220 15% 12%; /* Very dark gray, almost black */
-    --foreground: 220 10% 90%; /* Light gray text */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%; /* Adjusted for dark mode */
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 50.6%; /* Adjusted for dark mode */
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --input-foreground: 0 0% 98%;
+    --ring: 210 100% 50%;
 
-    --card: 220 15% 18%; /* Darker card background */
-    --card-foreground: 220 10% 90%;
-
-    --popover: 220 15% 18%;
-    --popover-foreground: 220 10% 90%;
-
-    --primary: 210 100% 55%; /* Brighter blue for dark mode */
-    --primary-foreground: 220 10% 5%; /* Dark text on primary */
-
-    --secondary: 220 15% 22%; /* Slightly lighter dark gray */
-    --secondary-foreground: 220 10% 80%;
-
-    --muted: 220 15% 20%;
-    --muted-foreground: 220 10% 55%;
-
-    --accent: 210 100% 60%;
-    --accent-foreground: 220 10% 5%;
-
-    --destructive: 0 60% 50%; /* Dark mode red */
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 220 15% 25%; /* Dark borders */
-    --input: 220 15% 20%; /* Dark input background */
-    --input-foreground: 220 10% 90%;
-    --ring: 210 100% 60%;
-
-    /* JPMC Branding (use sparingly) */
-    --jpmc-brand-blue-hsl: 210 100% 45%;
-    --jpmc-brand-darkblue-hsl: 210 100% 35%;
-
-    /* Dark Charting Palette */
-    --chart-primary: 210 90% 60%;
-    --chart-secondary: 190 70% 55%;
-    --chart-accent1: 35 90% 65%;
-    --chart-accent2: 260 70% 75%;
-    --chart-accent3: 50 95% 70%;
-    --chart-positive: 130 60% 55%;
-    --chart-negative: 0 65% 60%;
-    --chart-neutral: 220 10% 50%;
+    /* Dark Chart Colors */
+    --chart-1: 210 100% 55%;
+    --chart-2: 210 90% 70%;
+    --chart-3: 240 5% 50%;
+    --chart-4: 180 80% 50%;
+    --chart-5: 270 80% 70%;
+    --chart-positive: 140 60% 50%;
+    --chart-negative: 0 70% 60%;
   }
 }
 
@@ -103,80 +76,32 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-geist; /* Ensures Geist is the base body font */
-    -webkit-font-smoothing: antialiased; /* Smoother fonts on WebKit */
-    -moz-osx-font-smoothing: grayscale; /* Smoother fonts on Firefox */
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-gilroy font-semibold text-foreground; /* Apply Gilroy to all headers */
-  }
-  h1 {
-    @apply text-4xl tracking-tight;
-  } /* Adjusted tracking for larger headings */
-  h2 {
-    @apply text-3xl tracking-tight;
-  }
-  h3 {
-    @apply text-2xl tracking-tight;
-  }
-  h4 {
-    @apply text-xl;
-  }
-  p,
-  li,
-  span,
-  label,
-  div /* for general text */ {
-    @apply text-base;
-  }
-
-  /* Typography classes (keep if specific mono font is needed) */
-  .text-numerical {
-    @apply font-ibm-plex-mono;
-  }
-  .text-content {
-    /* This might be redundant if body defaults to geist */
-    @apply font-geist;
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-@layer components {
-  /* Refined gradient to use the new primary */
-  .jpmc-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--jpmc-brand-darkblue-hsl)) 100%);
-  }
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-muted/50;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-primary/50;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary/70;
+}
 
-  /* Status chips - adjust backgrounds for new palette */
-  .status-chip {
-    @apply inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium border; /* Slightly larger padding, more rounded */
-  }
-
-  .status-pending {
-    /* Amber/Yellow */
-    @apply bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-700/30 dark:text-yellow-300 dark:border-yellow-600;
-  }
-  .status-approved,
-  .status-funded,
-  .status-active {
-    /* Green */
-    @apply bg-green-100 text-green-800 border-green-300 dark:bg-green-700/30 dark:text-green-300 dark:border-green-600;
-  }
-  .status-rejected {
-    /* Red */
-    @apply bg-red-100 text-red-800 border-red-300 dark:bg-red-700/30 dark:text-red-300 dark:border-red-600;
-  }
-  .status-under-review {
-    /* Blue */
-    @apply bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-700/30 dark:text-blue-300 dark:border-blue-600;
-  }
-  .status-inactive {
-    /* Gray */
-    @apply bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700/30 dark:text-slate-300 dark:border-slate-600;
-  }
+/* JPMC Gradient for specific buttons */
+.jpmc-gradient {
+  /* Applying Tailwind utility classes directly for the gradient */
+  @apply bg-gradient-to-r from-primary to-jpmc-brand-darkblue text-primary-foreground;
 }

@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss"
 
 const config: Config = {
-  darkMode: ["class"],
+  darkMode: ["class"], // This enables toggling dark mode via a class on the HTML element
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -20,15 +20,13 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        // Assumes GeistSans.variable (--font-geist-sans) and GeistMono.variable (--font-geist-mono) are available globally from clientLayout.tsx
-        geist: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        "ibm-plex-mono": ["var(--font-geist-mono)", "monospace"], // Using Geist Mono for IBM Plex Mono alias
-        gilroy: ["Gilroy", "system-ui", "sans-serif"], // Added Gilroy font family
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))", // Ring color for focus states
+        ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
@@ -59,46 +57,36 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // JPMC specific colors (can be used for branding accents)
-        "jpmc-brand-blue": "hsl(210, 100%, 35%)", // Original JPMC Blue
-        "jpmc-brand-darkblue": "hsl(210, 100%, 25%)",
-        jpmc: {
-          blue: "hsl(var(--primary))", // Maintained for consistency
-          darkblue: "hsl(210, 100%, 25%)", // Darker shade
-          lightblue: "hsl(210, 100%, 95%)", // Lighter shade for backgrounds
-          gray: "#6b7280",
-          lightgray: "#f8fafc",
-        },
+        // JPMC specific colors
+        "jpmc-brand-blue": "hsl(210, 100%, 45%)", // Maintained for consistency if needed
+        "jpmc-brand-darkblue": "hsl(210, 100%, 35%)", // Used in gradient
         // Chart-specific color palette
-        charting: {
-          primary: "hsl(var(--chart-primary))",
-          secondary: "hsl(var(--chart-secondary))",
-          accent1: "hsl(var(--chart-accent1))",
-          accent2: "hsl(var(--chart-accent2))",
-          accent3: "hsl(var(--chart-accent3))",
+        chart: {
+          "1": "hsl(var(--chart-1))",
+          "2": "hsl(var(--chart-2))",
+          "3": "hsl(var(--chart-3))",
+          "4": "hsl(var(--chart-4))",
+          "5": "hsl(var(--chart-5))",
           positive: "hsl(var(--chart-positive))",
           negative: "hsl(var(--chart-negative))",
-          neutral: "hsl(var(--chart-neutral))",
         },
       },
       borderRadius: {
-        // Apple-like rounded corners
-        xl: "calc(var(--radius) + 4px)", // For larger elements like modals
-        lg: "var(--radius)", // Default for cards, buttons
-        md: "calc(var(--radius) - 4px)", // Slightly less for smaller elements
-        sm: "calc(var(--radius) - 8px)", // For very small elements like tags
+        xl: "calc(var(--radius) + 4px)",
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       fontSize: {
-        // Define a clear typographic scale
-        xs: ["0.75rem", { lineHeight: "1rem" }], // 12px
-        sm: ["0.875rem", { lineHeight: "1.25rem" }], // 14px
-        base: ["1rem", { lineHeight: "1.5rem" }], // 16px
-        lg: ["1.125rem", { lineHeight: "1.75rem" }], // 18px
-        xl: ["1.25rem", { lineHeight: "1.75rem" }], // 20px
-        "2xl": ["1.5rem", { lineHeight: "2rem" }], // 24px
-        "3xl": ["1.875rem", { lineHeight: "2.25rem" }], // 30px
-        "4xl": ["2.25rem", { lineHeight: "2.5rem" }], // 36px
-        "5xl": ["3rem", { lineHeight: "1.1" }], // 48px
+        xs: ["0.75rem", { lineHeight: "1rem" }],
+        sm: ["0.875rem", { lineHeight: "1.25rem" }],
+        base: ["1rem", { lineHeight: "1.5rem" }],
+        lg: ["1.125rem", { lineHeight: "1.75rem" }],
+        xl: ["1.25rem", { lineHeight: "1.75rem" }],
+        "2xl": ["1.5rem", { lineHeight: "2rem" }],
+        "3xl": ["1.875rem", { lineHeight: "2.25rem" }],
+        "4xl": ["2.25rem", { lineHeight: "2.5rem" }],
+        "5xl": ["3rem", { lineHeight: "1.1" }],
       },
       keyframes: {
         "accordion-down": {
@@ -109,10 +97,20 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "flyout-fade-in": {
+          from: { opacity: "0", transform: "translateX(-10px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "flyout-fade-out": {
+          from: { opacity: "1", transform: "translateX(0)" },
+          to: { opacity: "0", transform: "translateX(-10px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "flyout-in": "flyout-fade-in 0.2s ease-out forwards",
+        "flyout-out": "flyout-fade-out 0.3s ease-in forwards",
       },
     },
   },
