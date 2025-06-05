@@ -1,7 +1,5 @@
-"use client"
-
-import { MentorsContent } from "@/components/mentors-content" // To be created
+import { MentorMatching } from "@/components/mentorship/mentor-matching"
 
 export default function MentorsPage() {
-  return <MentorsContent />
+  return <MentorMatching />
 }

@@ -2,15 +2,13 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { SideNavigation } from "@/components/side-navigation"
 import { MobileNavMenu } from "@/components/mobile-nav-menu"
-import { Toaster } from "@/components/ui/toaster"
 import { GlobalSettingsProvider } from "@/contexts/global-settings-context"
-import { ThemeProvider } from "@/components/theme-provider"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
+import { NotificationProvider } from "@/contexts/notification-context"
+import { AdvancedSearch } from "@/components/advanced-search"
 
 interface ClientLayoutProps {
   children: React.ReactNode
@@ -18,24 +16,46 @@ interface ClientLayoutProps {
 
 export default function ClientLayout({ children }: ClientLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
-  const handleMenuClick = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
-  }
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault()
+        setIsSearchOpen(true)
+      }
+      if (e.key === "Escape") {
+        setIsSearchOpen(false)
+        setIsMobileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [])
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <GlobalSettingsProvider>
-        <div className={`${GeistSans.variable} ${GeistMono.variable} min-h-screen bg-background font-sans antialiased`}>
-          <Header onMenuClick={handleMenuClick} />
+    <GlobalSettingsProvider>
+      <NotificationProvider>
+        <div className="min-h-screen bg-background">
+          <Header onMenuClick={() => setIsMobileMenuOpen(true)} onSearchClick={() => setIsSearchOpen(true)} />
+
           <div className="flex">
             <SideNavigation />
-            <MobileNavMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-            <main className="flex-1 ml-16 p-6 overflow-auto">{children}</main>
+
+            <main className="flex-1 ml-16 pt-16">
+              <div className="container mx-auto p-6">{children}</div>
+            </main>
           </div>
-          <Toaster />
+
+          {/* Mobile Navigation */}
+          <MobileNavMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+
+          {/* Advanced Search Modal */}
+          <AdvancedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
         </div>
-      </GlobalSettingsProvider>
-    </ThemeProvider>
+      </NotificationProvider>
+    </GlobalSettingsProvider>
   )
 }

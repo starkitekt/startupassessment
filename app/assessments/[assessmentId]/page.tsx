@@ -34,6 +34,14 @@ import {
 } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useGlobalSettings } from "@/contexts/global-settings-context"
+import { DocumentUploader, DocumentList } from "@/components/document-uploader"
+import { useDocuments } from "@/contexts/document-context"
+import {
+  AssessmentWorkflow,
+  type AssessmentWorkflowData,
+  type AssessmentStage,
+  type AssessmentScore,
+} from "@/components/assessment-workflow"
 
 // Mock data for a single assessment - in a real app, this would be fetched
 const mockAssessmentDetails = {
@@ -75,6 +83,34 @@ const mockAssessmentDetails = {
   ],
 }
 
+const mockAssessmentWorkflow: AssessmentWorkflowData = {
+  id: "ASS001",
+  startupName: "Innovatech Solutions",
+  currentStage: "technical-review",
+  overallProgress: 60,
+  scores: [
+    {
+      category: "Market Potential",
+      score: 85,
+      maxScore: 100,
+      comments: "Strong market opportunity with clear value proposition",
+      reviewerId: "reviewer1",
+      reviewerName: "Priya Sharma",
+      reviewedAt: new Date("2024-01-18"),
+    },
+  ],
+  stageHistory: [
+    {
+      stage: "initial-screening",
+      completedAt: new Date("2024-01-16"),
+      completedBy: "Rajesh Kumar",
+      notes: "Initial documentation review completed successfully",
+    },
+  ],
+  canProceed: true,
+  blockers: [],
+}
+
 type AssessmentDocument = (typeof mockAssessmentDetails.documents)[0]
 type AssessmentComment = (typeof mockAssessmentDetails.comments)[0]
 type RequestedDocument = (typeof mockAssessmentDetails.requestedDocuments)[0]
@@ -85,6 +121,7 @@ export default function AssessmentDetailPage() {
   const { toast } = useToast()
   const { formatCurrency, selectedCurrency } = useGlobalSettings()
   const assessmentId = params.assessmentId as string
+  const { uploadDocuments, getDocumentsByEntity } = useDocuments()
 
   // In a real app, fetch assessment details based on assessmentId
   const [assessment, setAssessment] = useState(mockAssessmentDetails)
@@ -104,6 +141,24 @@ export default function AssessmentDetailPage() {
 
   if (!assessment) {
     return <div className="p-6 text-center">Loading assessment details...</div>
+  }
+
+  const handleStageChange = async (newStage: AssessmentStage, notes: string) => {
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    toast({
+      title: "Stage Updated",
+      description: `Assessment moved to ${newStage}`,
+    })
+  }
+
+  const handleScoreUpdate = async (score: AssessmentScore) => {
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    toast({
+      title: "Score Added",
+      description: "Assessment score has been recorded",
+    })
   }
 
   const handleAddComment = () => {
@@ -264,29 +319,19 @@ export default function AssessmentDetailPage() {
           <div>
             <h4 className="font-semibold text-md mb-2 flex items-center">
               <Paperclip className="mr-2 h-5 w-5 text-primary" />
-              Submitted Documents
+              Documents
             </h4>
-            {assessment.documents.length > 0 ? (
-              <ul className="space-y-2">
-                {assessment.documents.map((doc) => (
-                  <li key={doc.id} className="flex items-center justify-between p-2 border rounded-md text-sm">
-                    <a
-                      href={doc.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:underline text-primary"
-                    >
-                      {doc.name} ({doc.type})
-                    </a>
-                    <span className="text-xs text-muted-foreground">
-                      Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">No documents submitted yet.</p>
-            )}
+            <div className="space-y-4">
+              <DocumentUploader
+                onUpload={(files, type) => uploadDocuments(files, type, assessment.id)}
+                documentType="financials"
+              />
+              <DocumentList
+                documents={getDocumentsByEntity(assessment.id)}
+                onView={(doc) => window.open(doc.url, "_blank")}
+                onDelete={(id) => console.log("Delete:", id)}
+              />
+            </div>
           </div>
           <Separator />
 
@@ -356,6 +401,14 @@ export default function AssessmentDetailPage() {
             )}
           </div>
         </CardContent>
+        <Separator />
+        <div className="mt-6">
+          <AssessmentWorkflow
+            assessment={mockAssessmentWorkflow}
+            onStageChange={handleStageChange}
+            onScoreUpdate={handleScoreUpdate}
+          />
+        </div>
         <CardFooter className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t">
           <Button
             variant="destructive"
