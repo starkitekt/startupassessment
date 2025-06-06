@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { NavigationLayout } from "@/components/navigation-layout"
+import { AccessibleNavigationLayout } from "@/components/accessible-navigation-layout"
 import { Toaster } from "@/components/ui/toaster"
 
 interface ClientLayoutProps {
@@ -11,7 +11,7 @@ interface ClientLayoutProps {
 export default function ClientLayout({ children }: ClientLayoutProps) {
   return (
     <>
-      <NavigationLayout>{children}</NavigationLayout>
+      <AccessibleNavigationLayout>{children}</AccessibleNavigationLayout>
       <Toaster />
     </>
   )
