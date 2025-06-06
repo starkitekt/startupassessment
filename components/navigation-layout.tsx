@@ -12,15 +12,11 @@ interface NavigationLayoutProps {
 }
 
 export function NavigationLayout({ children }: NavigationLayoutProps) {
-  const [isNavCollapsed, setIsNavCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
-      if (window.innerWidth < 768) {
-        setIsNavCollapsed(true)
-      }
     }
 
     checkMobile()
@@ -29,15 +25,15 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
   }, [])
 
   const toggleNavigation = () => {
-    setIsNavCollapsed(!isNavCollapsed)
+    // Mobile navigation toggle can be implemented here if needed
   }
 
   return (
     <div className="min-h-screen bg-background">
       <Header onMenuToggle={toggleNavigation} />
-      <SideNavigation isCollapsed={isNavCollapsed} onToggle={toggleNavigation} />
-      <main className={cn("transition-all duration-300 pt-16", isNavCollapsed ? "ml-16" : "ml-64", isMobile && "ml-0")}>
-        <div className="container mx-auto p-4 md:p-6 lg:p-8">{children}</div>
+      <SideNavigation />
+      <main className={cn("transition-all duration-300", isMobile ? "ml-0 pt-16" : "ml-16 pt-16")}>
+        <div className="h-full p-4 md:p-6">{children}</div>
       </main>
     </div>
   )

@@ -35,6 +35,9 @@ interface NotificationContextType {
   deleteNotification: (id: string) => void
   clearAll: () => void
   getNotificationsByType: (type: NotificationType) => Notification[]
+  // Add these new functions
+  getNotificationsByPriority: (priority: "high" | "medium" | "low") => Notification[]
+  getGroupedNotifications: () => Record<string, Notification[]>
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
@@ -54,6 +57,43 @@ interface NotificationProviderProps {
 export function NotificationProvider({ children }: NotificationProviderProps) {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const { toast } = useToast()
+
+  // Add after the useState declarations
+  const [socket, setSocket] = useState<WebSocket | null>(null)
+
+  // Add this useEffect for WebSocket connection
+  useEffect(() => {
+    // In a real app, this would connect to your WebSocket server
+    // For demo purposes, we'll simulate real-time notifications
+    const simulateWebSocket = () => {
+      console.log("Simulating WebSocket connection for notifications")
+
+      // Simulate receiving a new notification every 30 seconds
+      const interval = setInterval(() => {
+        const randomTypes: NotificationType[] = ["assessment", "funding", "document", "mentor", "system"]
+        const randomType = randomTypes[Math.floor(Math.random() * randomTypes.length)]
+
+        const newNotification = {
+          title: `New ${randomType} update`,
+          message: `You have a new ${randomType} notification that requires your attention.`,
+          type: randomType,
+          actionUrl: `/${randomType}s`,
+          actionLabel: "View Details",
+        }
+
+        addNotification(newNotification)
+      }, 30000) // Every 30 seconds
+
+      return () => clearInterval(interval)
+    }
+
+    const cleanup = simulateWebSocket()
+
+    return () => {
+      cleanup
+      // In a real app: socket?.close()
+    }
+  }, [])
 
   // Initialize with mock notifications
   useEffect(() => {
@@ -102,6 +142,39 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
+  // Add this function inside the NotificationProvider
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio("/notification-sound.mp3")
+      audio.volume = 0.5
+      audio.play().catch((e) => console.log("Audio play failed:", e))
+    } catch (error) {
+      console.error("Failed to play notification sound:", error)
+    }
+  }
+
+  // Add browser notification support
+  const showBrowserNotification = (notification: Notification) => {
+    if (!("Notification" in window)) return
+
+    if (Notification.permission === "granted") {
+      new Notification(notification.title, {
+        body: notification.message,
+        icon: "/notification-icon.png",
+      })
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          new Notification(notification.title, {
+            body: notification.message,
+            icon: "/notification-icon.png",
+          })
+        }
+      })
+    }
+  }
+
+  // Update the addNotification function to include sound and browser notifications
   const addNotification = (notificationData: Omit<Notification, "id" | "read" | "createdAt">) => {
     const newNotification: Notification = {
       ...notificationData,
@@ -111,6 +184,12 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     }
 
     setNotifications((prev) => [newNotification, ...prev])
+
+    // Play sound for new notifications
+    playNotificationSound()
+
+    // Show browser notification
+    showBrowserNotification(newNotification)
 
     // Show toast for new notifications
     toast({
@@ -142,20 +221,51 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     return notifications.filter((notification) => notification.type === type)
   }
 
-  return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        unreadCount,
-        addNotification,
-        markAsRead,
-        markAllAsRead,
-        deleteNotification,
-        clearAll,
-        getNotificationsByType,
-      }}
-    >
-      {children}
-    </NotificationContext.Provider>
-  )
+  // Add these functions to the NotificationProvider
+  const getNotificationsByPriority = (priority: "high" | "medium" | "low") => {
+    const priorityMap: Record<NotificationType, "high" | "medium" | "low"> = {
+      error: "high",
+      warning: "medium",
+      success: "low",
+      info: "low",
+      assessment: "medium",
+      funding: "high",
+      document: "medium",
+      mentor: "low",
+      system: "medium",
+    }
+
+    return notifications.filter((notification) => priorityMap[notification.type] === priority)
+  }
+
+  const getGroupedNotifications = () => {
+    const groups: Record<string, Notification[]> = {}
+
+    notifications.forEach((notification) => {
+      const date = notification.createdAt.toDateString()
+      if (!groups[date]) {
+        groups[date] = []
+      }
+      groups[date].push(notification)
+    })
+
+    return groups
+  }
+
+  // Add these to the context value
+  const contextValue: NotificationContextType = {
+    notifications,
+    unreadCount,
+    addNotification,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    clearAll,
+    getNotificationsByType,
+    // Add these new functions
+    getNotificationsByPriority,
+    getGroupedNotifications,
+  }
+
+  return <NotificationContext.Provider value={contextValue}>{children}</NotificationContext.Provider>
 }

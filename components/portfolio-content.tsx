@@ -1,506 +1,310 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { MoreHorizontal, Plus, Search, Filter, ArrowUpDown, Download } from "lucide-react"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import {
-  PlusCircle,
-  Filter,
-  Search,
-  MoreHorizontal,
-  Eye,
-  Edit3,
-  Trash2,
-  UserCheck,
-  BarChartHorizontalBig,
-  ShieldCheck,
-} from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useToast } from "@/components/ui/use-toast"
-import { cn } from "@/lib/utils"
-import { useGlobalSettings } from "@/contexts/global-settings-context"
-import { TooltipProvider } from "@/components/ui/tooltip"
-import {
-  BarChart,
-  Bar,
-  Cell,
   ResponsiveContainer,
-  CartesianGrid,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
-  Tooltip as RechartsTooltip,
+  CartesianGrid,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts"
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
-import { Label } from "@/components/ui/label"
-import Image from "next/image"
 
-const mockPortfolios = [
+// Sample data
+const portfolioData = [
   {
-    id: "STP001",
-    name: "Innovatech Solutions",
-    logoUrl: "/placeholder.svg?height=32&width=32&text=IS",
+    id: "1",
+    name: "TechNova",
+    logo: "/placeholder.svg?height=40&width=40&text=TN",
     sector: "FinTech",
-    stage: "Seed",
-    fundingStatus: "Funded",
-    totalFunding: 50000000,
-    mrr: 1500000,
-    userGrowth: 25,
-    assignedMentor: "Ananya Sharma",
-    lastActivity: "2024-05-15",
-    tags: ["AI", "Payments"],
-    healthScore: 85,
-    currentMilestone: "Beta Launched",
-    mouStatus: "Completed",
-    nextMilestoneDueDate: "2024-07-15",
-  },
-  {
-    id: "STP002",
-    name: "HealthWell AI",
-    logoUrl: "/placeholder.svg?height=32&width=32&text=HA",
-    sector: "HealthTech",
     stage: "Series A",
-    fundingStatus: "Seeking",
-    totalFunding: 120000000,
-    mrr: 4500000,
-    userGrowth: 18,
-    assignedMentor: "Vikram Singh",
-    lastActivity: "2024-05-20",
-    tags: ["Diagnostics", "ML"],
-    healthScore: 78,
-    currentMilestone: "Prototype Complete",
-    mouStatus: "Pending eSign",
-    nextMilestoneDueDate: "2024-06-30",
+    investment: "₹2.5 Cr",
+    valuation: "₹25 Cr",
+    status: "Active",
+    performance: "High",
   },
   {
-    id: "STP003",
-    name: "EduSphere Learning",
-    logoUrl: "/placeholder.svg?height=32&width=32&text=EL",
-    sector: "EdTech",
+    id: "2",
+    name: "GreenEarth",
+    logo: "/placeholder.svg?height=40&width=40&text=GE",
+    sector: "CleanTech",
+    stage: "Seed",
+    investment: "₹75 L",
+    valuation: "₹5 Cr",
+    status: "Active",
+    performance: "Medium",
+  },
+  {
+    id: "3",
+    name: "HealthPlus",
+    logo: "/placeholder.svg?height=40&width=40&text=HP",
+    sector: "HealthTech",
     stage: "Pre-Seed",
-    fundingStatus: "Bootstrapped",
-    totalFunding: 5000000,
-    mrr: 200000,
-    userGrowth: 35,
-    assignedMentor: "Priya Desai",
-    lastActivity: "2024-05-10",
-    tags: ["K-12", "Gamification"],
-    healthScore: 92,
-    currentMilestone: "Onboarding",
-    mouStatus: "Sent",
-    nextMilestoneDueDate: "2024-06-20",
+    investment: "₹30 L",
+    valuation: "₹1.5 Cr",
+    status: "Active",
+    performance: "Low",
+  },
+  {
+    id: "4",
+    name: "EduLearn",
+    logo: "/placeholder.svg?height=40&width=40&text=EL",
+    sector: "EdTech",
+    stage: "Series B",
+    investment: "₹5 Cr",
+    valuation: "₹50 Cr",
+    status: "Active",
+    performance: "High",
+  },
+  {
+    id: "5",
+    name: "AgriTech Solutions",
+    logo: "/placeholder.svg?height=40&width=40&text=AT",
+    sector: "AgriTech",
+    stage: "Seed",
+    investment: "₹60 L",
+    valuation: "₹4 Cr",
+    status: "Active",
+    performance: "Medium",
   },
 ]
 
-const SECTORS = [
-  "All",
-  "FinTech",
-  "HealthTech",
-  "EdTech",
-  "AgriTech",
-  "SaaS",
-  "E-commerce",
-  "CleanTech",
-  "Cybersecurity",
+const performanceData = [
+  { month: "Jan", value: 4000 },
+  { month: "Feb", value: 3000 },
+  { month: "Mar", value: 5000 },
+  { month: "Apr", value: 2780 },
+  { month: "May", value: 1890 },
+  { month: "Jun", value: 2390 },
+  { month: "Jul", value: 3490 },
 ]
-const STAGES = ["All", "Pre-Seed", "Seed", "Series A", "Series B", "Growth", "Exit", "Onboarding"]
-const FUNDING_STATUSES = ["All", "Bootstrapped", "Seeking", "Funded", "Acquired"]
-const MOU_STATUSES = ["All", "Pending eSign", "Sent", "Completed", "Discrepancy"]
 
-// Unified Chart Colors from globals.css (via Tailwind)
-const CHART_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
+const sectorData = [
+  { name: "FinTech", value: 35 },
+  { name: "HealthTech", value: 25 },
+  { name: "EdTech", value: 20 },
+  { name: "CleanTech", value: 15 },
+  { name: "AgriTech", value: 5 },
 ]
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"]
 
 export function PortfolioContent() {
-  const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [filters, setFilters] = useState({ sector: "All", stage: "All", fundingStatus: "All", mouStatus: "All" })
-  const router = useRouter()
-  const { toast } = useToast()
-  const { formatCurrency, selectedCurrency, isExchangeRateLoading } = useGlobalSettings()
 
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 700)
-    return () => clearTimeout(timer)
-  }, [])
+  const filteredData = portfolioData.filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
 
-  const handleFilterChange = (filterType: keyof typeof filters, value: string) => {
-    setFilters((prev) => ({ ...prev, [filterType]: value }))
-  }
-
-  const filteredPortfolios = useMemo(() => {
-    return mockPortfolios.filter((startup) => {
-      const searchMatch =
-        startup.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        startup.sector.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (startup.tags && startup.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase())))
-      const sectorMatch = filters.sector === "All" || startup.sector === filters.sector
-      const stageMatch = filters.stage === "All" || startup.stage === filters.stage
-      const fundingMatch = filters.fundingStatus === "All" || startup.fundingStatus === filters.fundingStatus
-      const mouMatch = filters.mouStatus === "All" || startup.mouStatus === filters.mouStatus
-      return searchMatch && sectorMatch && stageMatch && fundingMatch && mouMatch
-    })
-  }, [searchTerm, filters])
-
-  const fundingStatusCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
-    mockPortfolios.forEach((startup) => {
-      counts[startup.fundingStatus] = (counts[startup.fundingStatus] || 0) + 1
-    })
-    return Object.entries(counts).map(([name, value], index) => ({
-      name,
-      value,
-      fill: CHART_COLORS[index % CHART_COLORS.length],
-    }))
-  }, [])
-
-  const handleAddNewStartup = () => router.push("/portfolio/new")
-  const viewStartupDetails = (startupId: string) => router.push(`/portfolio/${startupId}`)
-
-  const chartConfig = {
-    value: { label: "Startups" },
-    // Add other configs if needed
-  }
-
-  if (isLoading || isExchangeRateLoading) {
-    return (
-      <div className="space-y-6 p-4 md:p-6 lg:p-8">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-48 bg-muted" /> <Skeleton className="h-10 w-36 bg-muted" />
-        </div>
-        <Card className="bg-card border-border">
-          <CardContent className="p-4 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              <Skeleton className="h-10 w-full bg-muted" /> <Skeleton className="h-10 w-full bg-muted" />
-              <Skeleton className="h-10 w-full bg-muted" /> <Skeleton className="h-10 w-full bg-muted" />
-              <Skeleton className="h-10 w-full bg-muted" />
-            </div>
-          </CardContent>
-        </Card>
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <Skeleton className="h-[350px] w-full xl:col-span-1 bg-muted" />
-          <Skeleton className="h-[500px] w-full xl:col-span-2 bg-muted" />
-        </div>
-      </div>
-    )
+  const getPerformanceBadge = (performance: string) => {
+    switch (performance) {
+      case "High":
+        return <Badge className="bg-green-500">High</Badge>
+      case "Medium":
+        return <Badge className="bg-yellow-500">Medium</Badge>
+      case "Low":
+        return <Badge className="bg-red-500">Low</Badge>
+      default:
+        return <Badge>Unknown</Badge>
+    }
   }
 
   return (
-    <TooltipProvider>
-      <div className="space-y-8 p-4 md:p-6 lg:p-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">Startup Portfolio</h1>
-            <p className="text-lg text-muted-foreground">Manage and track all startups in your accelerator program.</p>
-          </div>
-          <Button onClick={handleAddNewStartup} className="w-full sm:w-auto jpmc-gradient text-primary-foreground">
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New Startup
-          </Button>
-        </div>
-
-        <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center text-xl text-foreground">
-              <Filter className="mr-2 h-5 w-5 text-primary" /> Filters
-            </CardTitle>
+    <div className="space-y-6">
+      {/* Portfolio Overview Cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Startups</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end">
-              <div className="relative lg:col-span-1">
-                <Label htmlFor="search-portfolio" className="text-muted-foreground">
-                  Search
-                </Label>
-                <Search className="absolute left-3 top-9 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search-portfolio"
-                  placeholder="Name, sector, tags..."
-                  className="pl-10 bg-input border-border text-foreground focus:ring-primary"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              {[
-                {
-                  label: "Sector",
-                  id: "filter-sector",
-                  value: filters.sector,
-                  options: SECTORS,
-                  key: "sector" as keyof typeof filters,
-                },
-                {
-                  label: "Stage",
-                  id: "filter-stage",
-                  value: filters.stage,
-                  options: STAGES,
-                  key: "stage" as keyof typeof filters,
-                },
-                {
-                  label: "Funding Status",
-                  id: "filter-funding",
-                  value: filters.fundingStatus,
-                  options: FUNDING_STATUSES,
-                  key: "fundingStatus" as keyof typeof filters,
-                },
-                {
-                  label: "MoU Status",
-                  id: "filter-mou",
-                  value: filters.mouStatus,
-                  options: MOU_STATUSES,
-                  key: "mouStatus" as keyof typeof filters,
-                },
-              ].map((filterItem) => (
-                <div key={filterItem.id}>
-                  <Label htmlFor={filterItem.id} className="text-muted-foreground">
-                    {filterItem.label}
-                  </Label>
-                  <Select value={filterItem.value} onValueChange={(v) => handleFilterChange(filterItem.key, v)}>
-                    <SelectTrigger
-                      id={filterItem.id}
-                      className="bg-input border-border text-foreground focus:ring-primary"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover border-border text-popover-foreground">
-                      {filterItem.options.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
+            <div className="text-2xl font-bold">24</div>
+            <p className="text-xs text-muted-foreground">+2 from last month</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Investment</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₹45.6 Cr</div>
+            <p className="text-xs text-muted-foreground">+₹3.2 Cr from last month</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Portfolio Valuation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₹320 Cr</div>
+            <p className="text-xs text-muted-foreground">+₹15 Cr from last month</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Avg. Growth Rate</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">18.5%</div>
+            <p className="text-xs text-muted-foreground">+2.3% from last month</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Portfolio Performance</CardTitle>
+            <CardDescription>Monthly valuation growth across portfolio</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={performanceData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="value" stroke="#8884d8" fillOpacity={1} fill="url(#colorValue)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <Card className="xl:col-span-1 bg-card border-border shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader>
-              <CardTitle className="text-foreground">Funding Status Distribution</CardTitle>
-              <CardDescription className="text-muted-foreground">Overview of portfolio funding stages.</CardDescription>
-            </CardHeader>
-            <CardContent className="h-[300px]">
-              <ChartContainer config={chartConfig} className="w-full h-full">
-                <ResponsiveContainer>
-                  <BarChart
-                    data={fundingStatusCounts}
-                    layout="vertical"
-                    margin={{ left: 10, right: 30, top: 5, bottom: 5 }}
+        <Card>
+          <CardHeader>
+            <CardTitle>Sector Distribution</CardTitle>
+            <CardDescription>Portfolio breakdown by industry sector</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={sectorData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   >
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
-                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-                    <YAxis
-                      type="category"
-                      dataKey="name"
-                      width={100}
-                      interval={0}
-                      stroke="hsl(var(--muted-foreground))"
-                      tick={{ fontSize: 12 }}
-                    />
-                    <RechartsTooltip
-                      content={<ChartTooltipContent indicator="dot" />}
-                      cursor={{ fill: "hsl(var(--muted))" }}
-                    />
-                    <Bar dataKey="value" name="Startups" radius={[0, 4, 4, 0]}>
-                      {fundingStatusCounts.map((entry) => (
-                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-
-          <Card className="xl:col-span-2 bg-card border-border shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardHeader>
-              <CardTitle className="text-foreground">Portfolio Overview</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Displaying {filteredPortfolios.length} of {mockPortfolios.length} startups.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border">
-                    <TableHead className="text-muted-foreground">Startup</TableHead>
-                    <TableHead className="text-muted-foreground">Sector</TableHead>
-                    <TableHead className="text-muted-foreground">Stage</TableHead>
-                    <TableHead className="text-muted-foreground">MoU Status</TableHead>
-                    <TableHead className="text-muted-foreground">Current Milestone</TableHead>
-                    <TableHead className="text-muted-foreground">Mentor</TableHead>
-                    <TableHead className="text-right text-muted-foreground">Health</TableHead>
-                    <TableHead className="text-center text-muted-foreground">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPortfolios.length > 0 ? (
-                    filteredPortfolios.map((startup) => (
-                      <TableRow
-                        key={startup.id}
-                        className="border-border hover:bg-muted/50 cursor-pointer"
-                        onClick={() => viewStartupDetails(startup.id)}
-                      >
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Image
-                              src={
-                                startup.logoUrl || `/placeholder.svg?height=32&width=32&text=${startup.name.charAt(0)}`
-                              }
-                              alt={startup.name}
-                              width={32}
-                              height={32}
-                              className="h-8 w-8 rounded-full object-cover border border-border"
-                            />
-                            <div>
-                              <div className="font-medium text-foreground">{startup.name}</div>
-                              <div className="text-xs text-muted-foreground">{startup.tags.join(", ")}</div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="border-border text-muted-foreground bg-muted">
-                            {startup.sector}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-foreground">{startup.stage}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={startup.mouStatus === "Completed" ? "default" : "outline"}
-                            className={cn(
-                              "border-border text-xs",
-                              startup.mouStatus === "Completed" && "bg-green-500/20 text-green-400 border-green-500/30",
-                              startup.mouStatus === "Pending eSign" &&
-                                "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-                              startup.mouStatus === "Sent" && "bg-blue-500/20 text-blue-400 border-blue-500/30",
-                            )}
-                          >
-                            {startup.mouStatus}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-foreground">{startup.currentMilestone}</TableCell>
-                        <TableCell className="text-foreground">{startup.assignedMentor || "N/A"}</TableCell>
-                        <TableCell className="text-right">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "border-border text-xs",
-                              startup.healthScore > 80 &&
-                                "bg-chart-positive/20 text-green-400 border-chart-positive/30",
-                              startup.healthScore <= 60 && "bg-chart-negative/20 text-red-400 border-chart-negative/30",
-                              startup.healthScore > 60 &&
-                                startup.healthScore <= 80 &&
-                                "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-                            )}
-                          >
-                            {startup.healthScore}%
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-muted-foreground hover:text-foreground"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align="end"
-                              className="bg-popover border-border text-popover-foreground"
-                            >
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  viewStartupDetails(startup.id)
-                                }}
-                              >
-                                <Eye className="mr-2 h-4 w-4" /> View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  router.push(`/portfolio/${startup.id}/edit`)
-                                }}
-                              >
-                                <Edit3 className="mr-2 h-4 w-4" /> Edit Startup
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="bg-border" />
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  toast({ title: "Manage Milestones (Simulated)" })
-                                }}
-                              >
-                                <BarChartHorizontalBig className="mr-2 h-4 w-4" /> Manage Milestones
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  toast({ title: "Assign Mentor (Simulated)" })
-                                }}
-                              >
-                                <UserCheck className="mr-2 h-4 w-4" /> Assign Mentor
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  router.push(`/audits?startupId=${startup.id}`)
-                                }}
-                              >
-                                <ShieldCheck className="mr-2 h-4 w-4" /> View Audit History
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="bg-border" />
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  toast({
-                                    title: `Simulated Deletion: ${startup.name}`,
-                                    description: "This is a UI demonstration.",
-                                    variant: "destructive",
-                                  })
-                                }}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow className="border-border">
-                      <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                        No startups found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
+                    {sectorData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </TooltipProvider>
+
+      {/* Portfolio Table */}
+      <Card>
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
+          <div>
+            <CardTitle>Portfolio Companies</CardTitle>
+            <CardDescription>Manage your startup investments</CardDescription>
+          </div>
+          <Button className="jpmc-gradient">
+            <Plus className="mr-2 h-4 w-4" /> Add Company
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 mb-4">
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search companies..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" size="sm">
+                <Filter className="mr-2 h-4 w-4" /> Filter
+              </Button>
+              <Button variant="outline" size="sm">
+                <ArrowUpDown className="mr-2 h-4 w-4" /> Sort
+              </Button>
+              <Button variant="outline" size="sm">
+                <Download className="mr-2 h-4 w-4" /> Export
+              </Button>
+            </div>
+          </div>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Sector</TableHead>
+                  <TableHead>Stage</TableHead>
+                  <TableHead>Investment</TableHead>
+                  <TableHead>Valuation</TableHead>
+                  <TableHead>Performance</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredData.map((company) => (
+                  <TableRow key={company.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={company.logo || "/placeholder.svg"} alt={company.name} />
+                          <AvatarFallback>{company.name.substring(0, 2)}</AvatarFallback>
+                        </Avatar>
+                        <div className="font-medium">{company.name}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{company.sector}</TableCell>
+                    <TableCell>{company.stage}</TableCell>
+                    <TableCell>{company.investment}</TableCell>
+                    <TableCell>{company.valuation}</TableCell>
+                    <TableCell>{getPerformanceBadge(company.performance)}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>View details</DropdownMenuItem>
+                          <DropdownMenuItem>Edit company</DropdownMenuItem>
+                          <DropdownMenuItem>View reports</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
