@@ -20,6 +20,7 @@ import {
   Shield,
   Target,
   Heart,
+  Zap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -42,10 +43,11 @@ const navigationSections = [
     ],
   },
   {
-    title: "People & Community",
+    title: "Growth & Community",
     items: [
       { name: "Mentors", href: "/mentors", icon: Users },
       { name: "Programs", href: "/programs", icon: Target },
+      { name: "Acceleration", href: "/accelerator", icon: Zap },
       { name: "Requests", href: "/requests", icon: MessageSquare },
       { name: "CSR Portal", href: "/csr", icon: Heart },
     ],

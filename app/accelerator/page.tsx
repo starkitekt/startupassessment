@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ExternalLink, FileText, Lightbulb, PlusCircle, Rocket, Users, Zap, TrendingUp, Target } from "lucide-react"
+import { ExternalLink, FileText, Lightbulb, PlusCircle, Rocket, Users, TrendingUp, Target } from "lucide-react"
 import Link from "next/link"
 import {
   ResponsiveContainer,
@@ -19,7 +19,8 @@ import {
   Tooltip as RechartsTooltip,
   Cell,
 } from "recharts"
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart" // Ensure this is correctly imported
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
+import { StandardizedPageLayout } from "@/components/standardized-page-layout"
 
 const mockAcceleratorPrograms = [
   {
@@ -31,8 +32,8 @@ const mockAcceleratorPrograms = [
     nextCohortStartDate: "2025-09-01",
     slots: 20,
     applicationsReceived: 150,
-    successRate: 75, // Percentage
-    avgFundingPostProgram: 500000, // In USD
+    successRate: 75,
+    avgFundingPostProgram: 500000,
   },
   {
     id: "prog002",
@@ -55,8 +56,8 @@ const mockAcceleratorPrograms = [
     nextCohortStartDate: "2025-11-01",
     slots: 18,
     applicationsReceived: 0,
-    successRate: 0, // N/A yet
-    avgFundingPostProgram: 0, // N/A yet
+    successRate: 0,
+    avgFundingPostProgram: 0,
   },
 ]
 
@@ -88,8 +89,8 @@ const mockMyEnrolledPrograms = [
     milestoneProgress: 60,
     nextDeadline: "2025-07-15",
     mentor: "Dr. Anya Sharma",
-    mentorId: "M001", // Added for linking
-    overallProgress: 45, // Overall program progress
+    mentorId: "M001",
+    overallProgress: 45,
     keyMetrics: [
       { name: "User Engagement", value: "70%", trend: "up" },
       { name: "Technical Debt", value: "Low", trend: "stable" },
@@ -105,38 +106,24 @@ const applicationFunnelData = [
   { stage: "Accepted", count: 35, fill: "hsl(var(--chart-5))" },
 ]
 
-const cohortPerformanceData = [
-  { name: "Cohort Alpha (2024 Q3)", avgMilestoneCompletion: 85, graduationRate: 90, avgFunding: 600000 },
-  { name: "Cohort Beta (2024 Q4)", avgMilestoneCompletion: 78, graduationRate: 85, avgFunding: 450000 },
-  { name: "Cohort Gamma (2025 Q1)", avgMilestoneCompletion: 60, graduationRate: 0, avgFunding: 0 }, // In progress
-]
-
 const chartConfig = {
   count: { label: "Count", color: "hsl(var(--chart-1))" },
-  avgMilestoneCompletion: { label: "Avg. Milestone %", color: "hsl(var(--chart-2))" },
-  graduationRate: { label: "Graduation %", color: "hsl(var(--chart-3))" },
-  avgFunding: { label: "Avg. Funding (USD)", color: "hsl(var(--chart-4))" },
 }
 
 export default function AcceleratorPage() {
   return (
-    <div className="space-y-8 p-4 md:p-6 lg:p-8">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl flex items-center gap-2">
-            <Zap className="h-8 w-8 text-primary" /> Accelerator Hub
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Discover, apply, and manage your journey through our startup accelerator programs.
-          </p>
-        </div>
+    <StandardizedPageLayout
+      title="Accelerator Hub"
+      description="Discover, apply, and manage your journey through our startup accelerator programs."
+      actions={
         <Button asChild className="jpmc-gradient">
           <Link href="/accelerator/apply">
             <PlusCircle className="mr-2 h-4 w-4" /> Apply to a Program
           </Link>
         </Button>
-      </header>
-
+      }
+    >
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -197,6 +184,7 @@ export default function AcceleratorPage() {
         </Card>
       </div>
 
+      {/* Tabs Section */}
       <Tabs defaultValue="overview">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-6">
           <TabsTrigger value="overview">Programs Overview</TabsTrigger>
@@ -393,7 +381,7 @@ export default function AcceleratorPage() {
                 </div>
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
-                  <Zap className="mx-auto h-12 w-12 mb-3" />
+                  <Rocket className="mx-auto h-12 w-12 mb-3" />
                   <p className="text-lg">You are not currently enrolled in any accelerator programs.</p>
                 </div>
               )}
@@ -401,6 +389,6 @@ export default function AcceleratorPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </StandardizedPageLayout>
   )
 }

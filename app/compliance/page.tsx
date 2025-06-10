@@ -1,24 +1,16 @@
-"use client" // Ensure client component for interactivity
+"use client"
 
+import { Button } from "@/components/ui/button"
+import { StandardizedPageLayout } from "@/components/standardized-page-layout"
+import { ShieldCheck, FileText } from "lucide-react"
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  BookOpen,
-  CheckCircle,
-  ClipboardCheck,
-  FileText,
-  Gavel,
-  ShieldCheck,
-  ArrowRight,
-  TrendingUp,
-  ListChecks,
-} from "lucide-react"
-import Link from "next/link"
+import { BookOpen, CheckCircle, ClipboardCheck, ArrowRight, TrendingUp, ListChecks } from "lucide-react"
 import {
   ResponsiveContainer,
   BarChart,
@@ -34,6 +26,7 @@ import {
 } from "recharts"
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 
+// Mock data (same as before)
 const mockComplianceOverview = {
   overallStatus: "Good",
   overallProgress: 85,
@@ -175,11 +168,13 @@ export default function CompliancePage() {
     if (status === "Needs Review") return "bg-amber-500/20 text-amber-400 border-amber-500/30"
     return "bg-red-500/20 text-red-400 border-red-500/30" // Critical or other
   }
+
   const getRiskColor = (risk: string) => {
     if (risk === "Low") return "text-green-400"
     if (risk === "Medium") return "text-yellow-400"
     return "text-red-400" // High
   }
+
   const getPriorityColor = (priority: string) => {
     if (priority === "High") return "text-red-400"
     if (priority === "Medium") return "text-yellow-400"
@@ -187,23 +182,17 @@ export default function CompliancePage() {
   }
 
   return (
-    <div className="space-y-8 p-4 md:p-6 lg:p-8">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl flex items-center gap-2">
-            <Gavel className="h-8 w-8 text-primary" /> Compliance Center
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Monitor, manage, and maintain adherence to regulatory standards and internal policies.
-          </p>
-        </div>
-        <Button asChild variant="outline">
+    <StandardizedPageLayout
+      title="Compliance Center"
+      description="Monitor, manage, and maintain adherence to regulatory standards and internal policies"
+      actions={
+        <Button variant="outline" asChild>
           <Link href="/audits">
             <ShieldCheck className="mr-2 h-4 w-4" /> View Audit Logs
           </Link>
         </Button>
-      </header>
-
+      }
+    >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -456,6 +445,6 @@ export default function CompliancePage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </StandardizedPageLayout>
   )
 }

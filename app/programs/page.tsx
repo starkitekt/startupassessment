@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Briefcase, Users, Target, TrendingUp, Plus, Calendar, Clock } from "lucide-react"
 import Link from "next/link"
+import { StandardizedPageLayout } from "@/components/standardized-page-layout"
 
 const programStats = [
   {
@@ -71,20 +72,18 @@ const activePrograms = [
 
 export default function ProgramsPage() {
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Program Management</h1>
-          <p className="text-muted-foreground">Manage accelerator and incubation programs</p>
-        </div>
+    <StandardizedPageLayout
+      title="Program Management"
+      description="Manage accelerator and incubation programs"
+      actions={
         <Button asChild className="jpmc-gradient">
           <Link href="/programs/new">
             <Plus className="mr-2 h-4 w-4" />
             Create New Program
           </Link>
         </Button>
-      </div>
-
+      }
+    >
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {programStats.map((stat) => (
@@ -229,6 +228,6 @@ export default function ProgramsPage() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </StandardizedPageLayout>
   )
 }
