@@ -19,8 +19,7 @@ import {
   MessageSquare,
   Shield,
   Target,
-  BookOpen,
-  HelpCircle,
+  Heart,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useEffect, useRef } from "react"
@@ -44,19 +43,18 @@ const navigationSections = [
     ],
   },
   {
-    title: "People",
+    title: "People & Community",
     items: [
       { name: "Mentors", href: "/mentors", icon: Users, description: "Manage mentor network" },
       { name: "Programs", href: "/programs", icon: Target, description: "Accelerator programs and cohorts" },
       { name: "Requests", href: "/requests", icon: MessageSquare, description: "Handle requests and communications" },
+      { name: "CSR Portal", href: "/csr", icon: Heart, description: "Corporate Social Responsibility initiatives" },
     ],
   },
   {
     title: "Management",
     items: [
       { name: "Compliance", href: "/audits", icon: Shield, description: "Audit and compliance management" },
-      { name: "Knowledge", href: "/knowledge-base", icon: BookOpen, description: "Knowledge base and resources" },
-      { name: "Support", href: "/support", icon: HelpCircle, description: "Help and support center" },
       { name: "Settings", href: "/settings", icon: Settings, description: "Application settings and preferences" },
     ],
   },
@@ -77,7 +75,6 @@ export function AccessibleSideNavigation({ className }: AccessibleSideNavigation
     return pathname.startsWith(href)
   }
 
-  // Handle keyboard navigation within the sidebar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!navigationRef.current?.contains(e.target as Node)) return
@@ -87,7 +84,6 @@ export function AccessibleSideNavigation({ className }: AccessibleSideNavigation
       ) as NodeListOf<HTMLElement>
 
       const currentIndex = Array.from(focusableElements).indexOf(e.target as HTMLElement)
-
       let nextIndex = currentIndex
 
       switch (e.key) {
@@ -110,7 +106,6 @@ export function AccessibleSideNavigation({ className }: AccessibleSideNavigation
         default:
           return
       }
-
       focusableElements[nextIndex]?.focus()
     }
 
@@ -134,15 +129,11 @@ export function AccessibleSideNavigation({ className }: AccessibleSideNavigation
             {navigationSections.map((section, sectionIndex) => (
               <div key={section.title} className="space-y-1" role="group" aria-labelledby={`section-${sectionIndex}`}>
                 {sectionIndex > 0 && <Separator className="my-2" />}
-
-                {/* Screen reader only section title */}
                 <h2 id={`section-${sectionIndex}`} className="sr-only">
                   {section.title} navigation
                 </h2>
-
                 {section.items.map((item) => {
                   const itemIsActive = isActive(item.href)
-
                   return (
                     <Tooltip key={item.name}>
                       <TooltipTrigger asChild>

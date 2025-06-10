@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link" // Added for new card
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -35,6 +36,8 @@ import {
   Lock,
   AlertTriangle,
   CheckCircle,
+  BookOpen,
+  HelpCircle,
 } from "lucide-react"
 
 interface UserProfile {
@@ -172,9 +175,7 @@ export function SettingsProfileComplete() {
   const handleProfileUpdate = async () => {
     setLoading(true)
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000))
-
       toast({
         title: "Profile updated",
         description: "Your profile information has been saved successfully.",
@@ -199,7 +200,6 @@ export function SettingsProfileComplete() {
       })
       return
     }
-
     if (passwordData.newPassword.length < 8) {
       toast({
         title: "Password too short",
@@ -208,23 +208,11 @@ export function SettingsProfileComplete() {
       })
       return
     }
-
     setLoading(true)
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      setSecuritySettings((prev) => ({
-        ...prev,
-        passwordLastChanged: new Date(),
-      }))
-
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      })
-
+      setSecuritySettings((prev) => ({ ...prev, passwordLastChanged: new Date() }))
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" })
       toast({
         title: "Password changed",
         description: "Your password has been updated successfully.",
@@ -243,9 +231,7 @@ export function SettingsProfileComplete() {
   const handleNotificationUpdate = async () => {
     setLoading(true)
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 500))
-
       toast({
         title: "Notifications updated",
         description: "Your notification preferences have been saved.",
@@ -264,9 +250,7 @@ export function SettingsProfileComplete() {
   const handlePrivacyUpdate = async () => {
     setLoading(true)
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 500))
-
       toast({
         title: "Privacy settings updated",
         description: "Your privacy preferences have been saved.",
@@ -339,7 +323,7 @@ export function SettingsProfileComplete() {
               <div className="flex items-center gap-6">
                 <Avatar className="h-20 w-20">
                   <AvatarImage
-                    src={profile.avatarUrl || "/placeholder.svg"}
+                    src={profile.avatarUrl || "/placeholder.svg?height=100&width=100&query=user+avatar"}
                     alt={`${profile.firstName} ${profile.lastName}`}
                   />
                   <AvatarFallback className="text-lg">
@@ -493,6 +477,34 @@ export function SettingsProfileComplete() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* START: Added Resources & Support Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Resources & Support</CardTitle>
+              <CardDescription>Access knowledge base articles and get support.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Link
+                href="/knowledge-base"
+                className="flex items-center gap-3 p-3 rounded-md hover:bg-muted transition-colors"
+              >
+                <BookOpen className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-medium">Knowledge Base</p>
+                  <p className="text-sm text-muted-foreground">Find articles, guides, and FAQs.</p>
+                </div>
+              </Link>
+              <Link href="/support" className="flex items-center gap-3 p-3 rounded-md hover:bg-muted transition-colors">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-medium">Support Center</p>
+                  <p className="text-sm text-muted-foreground">Contact support or submit a ticket.</p>
+                </div>
+              </Link>
+            </CardContent>
+          </Card>
+          {/* END: Added Resources & Support Card */}
         </TabsContent>
 
         <TabsContent value="security" className="space-y-6">
@@ -517,6 +529,7 @@ export function SettingsProfileComplete() {
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
                   >
                     {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
@@ -537,6 +550,7 @@ export function SettingsProfileComplete() {
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowNewPassword(!showNewPassword)}
+                    aria-label={showNewPassword ? "Hide new password" : "Show new password"}
                   >
                     {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
@@ -576,11 +590,16 @@ export function SettingsProfileComplete() {
                 <div className="flex items-center gap-2">
                   {securitySettings.twoFactorEnabled && <CheckCircle className="h-4 w-4 text-green-600" />}
                   <Switch
+                    id="twoFactorSwitch"
                     checked={securitySettings.twoFactorEnabled}
                     onCheckedChange={(checked) =>
                       setSecuritySettings((prev) => ({ ...prev, twoFactorEnabled: checked }))
                     }
+                    aria-labelledby="twoFactorLabel"
                   />
+                  <Label htmlFor="twoFactorSwitch" id="twoFactorLabel" className="sr-only">
+                    Two-Factor Authentication
+                  </Label>
                 </div>
               </div>
               {securitySettings.twoFactorEnabled && (
@@ -606,11 +625,16 @@ export function SettingsProfileComplete() {
                   <div className="text-sm text-muted-foreground">Get notified when someone logs into your account</div>
                 </div>
                 <Switch
+                  id="loginNotificationsSwitch"
                   checked={securitySettings.loginNotifications}
                   onCheckedChange={(checked) =>
                     setSecuritySettings((prev) => ({ ...prev, loginNotifications: checked }))
                   }
+                  aria-labelledby="loginNotificationsLabel"
                 />
+                <Label htmlFor="loginNotificationsSwitch" id="loginNotificationsLabel" className="sr-only">
+                  Login Notifications
+                </Label>
               </div>
 
               <Separator />
@@ -646,14 +670,16 @@ export function SettingsProfileComplete() {
           <Card>
             <CardHeader>
               <CardTitle>Email Notifications</CardTitle>
-              <CardDescription>Choose what email notifications you'd like to receive.</CardDescription>
+              <CardDescription>Choose what email notifications you&apos;d like to receive.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {Object.entries(notificationSettings.email).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="font-medium capitalize">{key.replace(/([A-Z])/g, " $1").trim()}</div>
-                    <div className="text-sm text-muted-foreground">
+                    <Label htmlFor={`email-notif-${key}`} className="font-medium capitalize">
+                      {key.replace(/([A-Z])/g, " $1").trim()}
+                    </Label>
+                    <div id={`email-notif-desc-${key}`} className="text-sm text-muted-foreground">
                       {key === "assessments" && "New assessments, reviews, and status updates"}
                       {key === "portfolio" && "Portfolio company updates and milestones"}
                       {key === "tasks" && "Task assignments and deadline reminders"}
@@ -662,6 +688,7 @@ export function SettingsProfileComplete() {
                     </div>
                   </div>
                   <Switch
+                    id={`email-notif-${key}`}
                     checked={value}
                     onCheckedChange={(checked) =>
                       setNotificationSettings((prev) => ({
@@ -669,6 +696,7 @@ export function SettingsProfileComplete() {
                         email: { ...prev.email, [key]: checked },
                       }))
                     }
+                    aria-describedby={`email-notif-desc-${key}`}
                   />
                 </div>
               ))}
@@ -684,8 +712,10 @@ export function SettingsProfileComplete() {
               {Object.entries(notificationSettings.push).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="font-medium capitalize">{key.replace(/([A-Z])/g, " $1").trim()}</div>
-                    <div className="text-sm text-muted-foreground">
+                    <Label htmlFor={`push-notif-${key}`} className="font-medium capitalize">
+                      {key.replace(/([A-Z])/g, " $1").trim()}
+                    </Label>
+                    <div id={`push-notif-desc-${key}`} className="text-sm text-muted-foreground">
                       {key === "assessments" && "Immediate notifications for urgent assessments"}
                       {key === "portfolio" && "Critical portfolio updates"}
                       {key === "tasks" && "Task assignments and urgent deadlines"}
@@ -693,6 +723,7 @@ export function SettingsProfileComplete() {
                     </div>
                   </div>
                   <Switch
+                    id={`push-notif-${key}`}
                     checked={value}
                     onCheckedChange={(checked) =>
                       setNotificationSettings((prev) => ({
@@ -700,6 +731,7 @@ export function SettingsProfileComplete() {
                         push: { ...prev.push, [key]: checked },
                       }))
                     }
+                    aria-describedby={`push-notif-desc-${key}`}
                   />
                 </div>
               ))}
@@ -713,12 +745,12 @@ export function SettingsProfileComplete() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Notification Frequency</Label>
+                <Label htmlFor="notificationFrequency">Notification Frequency</Label>
                 <Select
                   value={notificationSettings.frequency}
                   onValueChange={(value: any) => setNotificationSettings((prev) => ({ ...prev, frequency: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="notificationFrequency">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -733,10 +765,15 @@ export function SettingsProfileComplete() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="font-medium">Quiet Hours</div>
-                    <div className="text-sm text-muted-foreground">Pause notifications during specified hours</div>
+                    <Label htmlFor="quietHoursSwitch" className="font-medium">
+                      Quiet Hours
+                    </Label>
+                    <div id="quietHoursDesc" className="text-sm text-muted-foreground">
+                      Pause notifications during specified hours
+                    </div>
                   </div>
                   <Switch
+                    id="quietHoursSwitch"
                     checked={notificationSettings.quietHours.enabled}
                     onCheckedChange={(checked) =>
                       setNotificationSettings((prev) => ({
@@ -744,14 +781,16 @@ export function SettingsProfileComplete() {
                         quietHours: { ...prev.quietHours, enabled: checked },
                       }))
                     }
+                    aria-describedby="quietHoursDesc"
                   />
                 </div>
 
                 {notificationSettings.quietHours.enabled && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Start Time</Label>
+                      <Label htmlFor="quietHoursStart">Start Time</Label>
                       <Input
+                        id="quietHoursStart"
                         type="time"
                         value={notificationSettings.quietHours.start}
                         onChange={(e) =>
@@ -763,8 +802,9 @@ export function SettingsProfileComplete() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>End Time</Label>
+                      <Label htmlFor="quietHoursEnd">End Time</Label>
                       <Input
+                        id="quietHoursEnd"
                         type="time"
                         value={notificationSettings.quietHours.end}
                         onChange={(e) =>
@@ -794,51 +834,51 @@ export function SettingsProfileComplete() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
-                <div
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                <Button
+                  variant="outline"
+                  className={`p-4 h-auto border rounded-lg cursor-pointer transition-colors flex flex-col items-center justify-center space-y-2 ${
                     theme === "light" ? "border-primary bg-primary/5" : "border-border"
                   }`}
                   onClick={() => setTheme("light")}
+                  aria-pressed={theme === "light"}
                 >
-                  <div className="space-y-2">
-                    <div className="w-full h-8 bg-white border rounded"></div>
-                    <div className="space-y-1">
-                      <div className="w-3/4 h-2 bg-gray-300 rounded"></div>
-                      <div className="w-1/2 h-2 bg-gray-200 rounded"></div>
-                    </div>
+                  <div className="w-full h-8 bg-white border rounded"></div>
+                  <div className="space-y-1 w-full">
+                    <div className="w-3/4 h-2 bg-gray-300 rounded"></div>
+                    <div className="w-1/2 h-2 bg-gray-200 rounded"></div>
                   </div>
                   <div className="mt-2 text-sm font-medium">Light</div>
-                </div>
-                <div
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                </Button>
+                <Button
+                  variant="outline"
+                  className={`p-4 h-auto border rounded-lg cursor-pointer transition-colors flex flex-col items-center justify-center space-y-2 ${
                     theme === "dark" ? "border-primary bg-primary/5" : "border-border"
                   }`}
                   onClick={() => setTheme("dark")}
+                  aria-pressed={theme === "dark"}
                 >
-                  <div className="space-y-2">
-                    <div className="w-full h-8 bg-gray-800 border border-gray-700 rounded"></div>
-                    <div className="space-y-1">
-                      <div className="w-3/4 h-2 bg-gray-600 rounded"></div>
-                      <div className="w-1/2 h-2 bg-gray-700 rounded"></div>
-                    </div>
+                  <div className="w-full h-8 bg-gray-800 border border-gray-700 rounded"></div>
+                  <div className="space-y-1 w-full">
+                    <div className="w-3/4 h-2 bg-gray-600 rounded"></div>
+                    <div className="w-1/2 h-2 bg-gray-700 rounded"></div>
                   </div>
                   <div className="mt-2 text-sm font-medium">Dark</div>
-                </div>
-                <div
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                </Button>
+                <Button
+                  variant="outline"
+                  className={`p-4 h-auto border rounded-lg cursor-pointer transition-colors flex flex-col items-center justify-center space-y-2 ${
                     theme === "system" ? "border-primary bg-primary/5" : "border-border"
                   }`}
                   onClick={() => setTheme("system")}
+                  aria-pressed={theme === "system"}
                 >
-                  <div className="space-y-2">
-                    <div className="w-full h-8 bg-gradient-to-r from-white to-gray-800 border rounded"></div>
-                    <div className="space-y-1">
-                      <div className="w-3/4 h-2 bg-gradient-to-r from-gray-300 to-gray-600 rounded"></div>
-                      <div className="w-1/2 h-2 bg-gradient-to-r from-gray-200 to-gray-700 rounded"></div>
-                    </div>
+                  <div className="w-full h-8 bg-gradient-to-r from-white to-gray-800 border rounded"></div>
+                  <div className="space-y-1 w-full">
+                    <div className="w-3/4 h-2 bg-gradient-to-r from-gray-300 to-gray-600 rounded"></div>
+                    <div className="w-1/2 h-2 bg-gradient-to-r from-gray-200 to-gray-700 rounded"></div>
                   </div>
                   <div className="mt-2 text-sm font-medium">System</div>
-                </div>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -850,9 +890,9 @@ export function SettingsProfileComplete() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Density</Label>
+                <Label htmlFor="displayDensity">Density</Label>
                 <Select defaultValue="comfortable">
-                  <SelectTrigger>
+                  <SelectTrigger id="displayDensity">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -863,9 +903,9 @@ export function SettingsProfileComplete() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Font Size</Label>
+                <Label htmlFor="fontSize">Font Size</Label>
                 <Select defaultValue="medium">
-                  <SelectTrigger>
+                  <SelectTrigger id="fontSize">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -887,12 +927,12 @@ export function SettingsProfileComplete() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Profile Visibility</Label>
+                <Label htmlFor="profileVisibility">Profile Visibility</Label>
                 <Select
                   value={privacySettings.profileVisibility}
                   onValueChange={(value: any) => setPrivacySettings((prev) => ({ ...prev, profileVisibility: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="profileVisibility">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -906,32 +946,50 @@ export function SettingsProfileComplete() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="font-medium">Show Email Address</div>
-                    <div className="text-sm text-muted-foreground">Allow others to see your email address</div>
+                    <Label htmlFor="showEmailSwitch" className="font-medium">
+                      Show Email Address
+                    </Label>
+                    <div id="showEmailDesc" className="text-sm text-muted-foreground">
+                      Allow others to see your email address
+                    </div>
                   </div>
                   <Switch
+                    id="showEmailSwitch"
                     checked={privacySettings.showEmail}
                     onCheckedChange={(checked) => setPrivacySettings((prev) => ({ ...prev, showEmail: checked }))}
+                    aria-describedby="showEmailDesc"
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="font-medium">Show Phone Number</div>
-                    <div className="text-sm text-muted-foreground">Allow others to see your phone number</div>
+                    <Label htmlFor="showPhoneSwitch" className="font-medium">
+                      Show Phone Number
+                    </Label>
+                    <div id="showPhoneDesc" className="text-sm text-muted-foreground">
+                      Allow others to see your phone number
+                    </div>
                   </div>
                   <Switch
+                    id="showPhoneSwitch"
                     checked={privacySettings.showPhone}
                     onCheckedChange={(checked) => setPrivacySettings((prev) => ({ ...prev, showPhone: checked }))}
+                    aria-describedby="showPhoneDesc"
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="font-medium">Show Location</div>
-                    <div className="text-sm text-muted-foreground">Allow others to see your location</div>
+                    <Label htmlFor="showLocationSwitch" className="font-medium">
+                      Show Location
+                    </Label>
+                    <div id="showLocationDesc" className="text-sm text-muted-foreground">
+                      Allow others to see your location
+                    </div>
                   </div>
                   <Switch
+                    id="showLocationSwitch"
                     checked={privacySettings.showLocation}
                     onCheckedChange={(checked) => setPrivacySettings((prev) => ({ ...prev, showLocation: checked }))}
+                    aria-describedby="showLocationDesc"
                   />
                 </div>
               </div>
@@ -946,24 +1004,30 @@ export function SettingsProfileComplete() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <div className="font-medium">Analytics Opt-out</div>
-                  <div className="text-sm text-muted-foreground">Opt out of anonymous usage analytics</div>
+                  <Label htmlFor="analyticsOptOutSwitch" className="font-medium">
+                    Analytics Opt-out
+                  </Label>
+                  <div id="analyticsOptOutDesc" className="text-sm text-muted-foreground">
+                    Opt out of anonymous usage analytics
+                  </div>
                 </div>
                 <Switch
+                  id="analyticsOptOutSwitch"
                   checked={privacySettings.analyticsOptOut}
                   onCheckedChange={(checked) => setPrivacySettings((prev) => ({ ...prev, analyticsOptOut: checked }))}
+                  aria-describedby="analyticsOptOutDesc"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Data Retention Period</Label>
+                <Label htmlFor="dataRetention">Data Retention Period</Label>
                 <Select
                   value={privacySettings.dataRetention.toString()}
                   onValueChange={(value) =>
                     setPrivacySettings((prev) => ({ ...prev, dataRetention: Number.parseInt(value) }))
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="dataRetention">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1031,7 +1095,7 @@ export function SettingsProfileComplete() {
                         </p>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="delete-confirmation">Type "DELETE" to confirm account deletion</Label>
+                        <Label htmlFor="delete-confirmation">Type &quot;DELETE&quot; to confirm account deletion</Label>
                         <Input id="delete-confirmation" placeholder="Type DELETE here" />
                       </div>
                     </div>

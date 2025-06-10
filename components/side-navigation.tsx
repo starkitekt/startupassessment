@@ -19,7 +19,7 @@ import {
   MessageSquare,
   Shield,
   Target,
-  BookOpen,
+  Heart,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -42,18 +42,18 @@ const navigationSections = [
     ],
   },
   {
-    title: "People",
+    title: "People & Community",
     items: [
       { name: "Mentors", href: "/mentors", icon: Users },
       { name: "Programs", href: "/programs", icon: Target },
       { name: "Requests", href: "/requests", icon: MessageSquare },
+      { name: "CSR Portal", href: "/csr", icon: Heart },
     ],
   },
   {
     title: "Management",
     items: [
       { name: "Compliance", href: "/audits", icon: Shield },
-      { name: "Knowledge", href: "/knowledge-base", icon: BookOpen },
       { name: "Settings", href: "/settings", icon: Settings },
     ],
   },
@@ -74,14 +74,11 @@ export function SideNavigation() {
       <div className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-16 border-r bg-background">
         <ScrollArea className="h-full">
           <div className="flex flex-col gap-2 p-2">
-            {/* Navigation Sections */}
             {navigationSections.map((section, sectionIndex) => (
               <div key={section.title} className="space-y-1">
                 {sectionIndex > 0 && <Separator className="my-2" />}
-
                 {section.items.map((item) => {
                   const itemIsActive = isActive(item.href)
-
                   return (
                     <Tooltip key={item.name}>
                       <TooltipTrigger asChild>
@@ -97,6 +94,7 @@ export function SideNavigation() {
                         >
                           <Link href={item.href}>
                             <item.icon className="h-5 w-5" />
+                            <span className="sr-only">{item.name}</span>
                           </Link>
                         </Button>
                       </TooltipTrigger>
