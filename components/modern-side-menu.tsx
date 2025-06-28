@@ -20,6 +20,12 @@ import {
   Heart,
   Shield,
   Settings,
+  Rocket,
+  TrendingUp,
+  BookOpen,
+  Network,
+  PieChart,
+  Lightbulb,
 } from "lucide-react"
 
 // Define navigation items with proper grouping
@@ -41,6 +47,32 @@ const navigationItems = [
       { name: "Tasks", href: "/tasks", icon: CheckSquare, description: "Task management" },
       { name: "Funding", href: "/funding", icon: DollarSign, description: "Funding and investments" },
       { name: "Calendar", href: "/calendar", icon: Calendar, description: "Schedule and events" },
+    ],
+  },
+  {
+    group: "Founders",
+    items: [
+      { name: "Founder Hub", href: "/founders", icon: Rocket, description: "Founder dashboard and resources" },
+      {
+        name: "Progress",
+        href: "/founders/progress",
+        icon: TrendingUp,
+        description: "Track startup progress and milestones",
+      },
+      {
+        name: "Learning",
+        href: "/founders/learning",
+        icon: BookOpen,
+        description: "Educational resources and courses",
+      },
+      {
+        name: "Community",
+        href: "/founders/community",
+        icon: Network,
+        description: "Founder community and networking",
+      },
+      { name: "Equity", href: "/founders/equity", icon: PieChart, description: "Equity management and cap table" },
+      { name: "Ideas", href: "/founders/ideas", icon: Lightbulb, description: "Idea validation and feedback" },
     ],
   },
   {
