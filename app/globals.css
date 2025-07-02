@@ -1,0 +1,262 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Light Mode (Default) Variables */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 72.2% 50.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --input-foreground: 240 10% 3.9%;
+    --ring: 210 100% 50%;
+    --radius: 0.5rem;
+
+    /* Light Chart Colors */
+    --chart-1: 210 100% 50%;
+    --chart-2: 210 90% 65%;
+    --chart-3: 240 5% 60%;
+    --chart-4: 180 70% 40%;
+    --chart-5: 270 70% 55%;
+    --chart-positive: 140 60% 40%;
+    --chart-negative: 0 70% 50%;
+
+    /* Font variables with system fallbacks */
+    --font-neue-montreal: "Neue Montreal", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+      "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    --font-geist: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
+      "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    --font-ibm-plex-mono: "IBM Plex Mono", "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Oxygen Mono",
+      "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+  }
+
+  /* Dark Mode Variables */
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --input-foreground: 0 0% 98%;
+    --ring: 210 100% 50%;
+
+    /* Dark Chart Colors */
+    --chart-1: 210 100% 55%;
+    --chart-2: 210 90% 70%;
+    --chart-3: 240 5% 50%;
+    --chart-4: 180 80% 50%;
+    --chart-5: 270 80% 70%;
+    --chart-positive: 140 60% 50%;
+    --chart-negative: 0 70% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-geist;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography Base Styles */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-neue-montreal tracking-header;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  /* Responsive Header Sizes */
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl lg:text-4xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl lg:text-3xl;
+  }
+
+  h5 {
+    @apply text-lg md:text-xl lg:text-2xl;
+  }
+
+  h6 {
+    @apply text-base md:text-lg lg:text-xl;
+  }
+
+  /* Description and body text */
+  p,
+  span,
+  label,
+  div:not([class*="chart"]):not([class*="recharts"]) {
+    @apply font-geist tracking-description;
+    line-height: 1.6;
+  }
+
+  /* Mobile-specific adjustments */
+  @media (max-width: 640px) {
+    h1 {
+      @apply text-3xl;
+    }
+    h2 {
+      @apply text-2xl;
+    }
+    h3 {
+      @apply text-xl;
+    }
+    h4 {
+      @apply text-lg;
+    }
+    h5 {
+      @apply text-base;
+    }
+    h6 {
+      @apply text-sm;
+    }
+
+    p,
+    span,
+    label {
+      @apply text-sm;
+    }
+  }
+}
+
+@layer components {
+  /* Typography utility classes */
+  .text-header {
+    @apply font-neue-montreal tracking-header font-semibold;
+  }
+
+  .text-description {
+    @apply font-geist tracking-description;
+  }
+
+  .text-numerical {
+    @apply font-ibm-plex-mono tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* Responsive text sizes */
+  .text-display {
+    @apply text-4xl md:text-5xl lg:text-6xl font-neue-montreal tracking-header font-bold;
+  }
+
+  .text-title {
+    @apply text-2xl md:text-3xl lg:text-4xl font-neue-montreal tracking-header font-semibold;
+  }
+
+  .text-subtitle {
+    @apply text-lg md:text-xl lg:text-2xl font-neue-montreal tracking-header font-medium;
+  }
+
+  .text-body {
+    @apply text-base md:text-lg font-geist tracking-description;
+  }
+
+  .text-caption {
+    @apply text-sm md:text-base font-geist tracking-description text-muted-foreground;
+  }
+
+  .text-small {
+    @apply text-xs md:text-sm font-geist tracking-description text-muted-foreground;
+  }
+
+  /* Number-specific classes */
+  .text-metric {
+    @apply text-2xl md:text-3xl lg:text-4xl font-ibm-plex-mono tabular-nums font-bold;
+  }
+
+  .text-stat {
+    @apply text-lg md:text-xl lg:text-2xl font-ibm-plex-mono tabular-nums font-semibold;
+  }
+
+  .text-number {
+    @apply font-ibm-plex-mono tabular-nums;
+  }
+
+  /* Card and component specific typography */
+  .card-title {
+    @apply text-lg md:text-xl font-neue-montreal tracking-header font-semibold;
+  }
+
+  .card-description {
+    @apply text-sm md:text-base font-geist tracking-description text-muted-foreground;
+  }
+
+  /* Button typography */
+  .btn-text {
+    @apply font-geist tracking-description font-medium;
+  }
+
+  /* Navigation typography */
+  .nav-text {
+    @apply font-geist tracking-description font-medium;
+  }
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-muted/50;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-primary/50;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary/70;
+}
+
+/* JPMC Gradient for specific buttons */
+.jpmc-gradient {
+  @apply bg-gradient-to-r from-primary to-jpmc-brand-darkblue text-primary-foreground;
+}
