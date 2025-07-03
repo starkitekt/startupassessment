@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-export function NotificationBadge({ count }: { count: number }) {
-  return (
-    <span className="min-w-[24px] px-1 overflow-hidden inline-block text-center rounded-full bg-destructive text-white text-xs font-bold">
-      {count > 99 ? '99+' : count}
-    </span>
-  )
-} 
-=======
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -43,4 +34,3 @@ function Badge({ className, variant, ...props }: BadgeProps) {
 }
 
 export { Badge, badgeVariants }
->>>>>>> 92b17aa89294c95e372d38d4e5fa92c7c16a0941

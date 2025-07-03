@@ -1,13 +1,3 @@
-<<<<<<< HEAD
-<div className="overflow-x-auto">
-  <Table>
-    // ... existing code ...
-  </Table>
-</div>
-<TableCell className="font-medium truncate max-w-[120px]">{participant.startupName}</TableCell>
-<TableCell className="truncate max-w-[120px]">{participant.founderName}</TableCell>
-// ... existing code ... 
-=======
 "use client"
 
 import { useState, useMemo } from "react"
@@ -480,4 +470,3 @@ export function CohortManagement() {
     </div>
   )
 }
->>>>>>> 92b17aa89294c95e372d38d4e5fa92c7c16a0941

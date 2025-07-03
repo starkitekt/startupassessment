@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-{ title: "Growth", ... }
-{ title: "Founders", ... } 
-=======
 "use client"
 
 import Link from "next/link"
@@ -183,4 +179,3 @@ export function MobileTopNav({ isOpen, onClose }: MobileTopNavProps) {
     </Sheet>
   )
 }
->>>>>>> 92b17aa89294c95e372d38d4e5fa92c7c16a0941

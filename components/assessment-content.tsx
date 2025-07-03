@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-<div className="overflow-x-auto">
-  <Table>
-    <TableCell className="font-medium truncate max-w-[120px]">{assessment.id}</TableCell>
-    <TableCell className="truncate max-w-[120px]">{assessment.startupName}</TableCell>
-  </Table>
-</div> 
-=======
 "use client"
 
 import { Progress } from "@/components/ui/progress"
@@ -406,4 +398,3 @@ export function AssessmentContent() {
     </TooltipProvider>
   )
 }
->>>>>>> 92b17aa89294c95e372d38d4e5fa92c7c16a0941
