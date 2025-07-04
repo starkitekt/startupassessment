@@ -1,33 +1,33 @@
 "use client"
 
-import { AuditComplianceDashboard } from "@/components/audit-compliance/audit-compliance-dashboard"
+import { POSHComplianceModule } from "@/components/audit-compliance/posh-compliance-module"
 import { StandardizedPageLayout } from "@/components/standardized-page-layout"
 import { Button } from "@/components/ui/button"
-import { Plus, FileText, AlertTriangle } from "lucide-react"
+import { Plus, AlertTriangle, BookOpen } from "lucide-react"
 
-export default function AuditsPage() {
+export default function POSHCompliancePage() {
   return (
     <StandardizedPageLayout
-      title="Audit & Compliance Management"
-      description="Comprehensive regulatory compliance platform for Indian startups"
+      title="POSH Compliance"
+      description="Prevention of Sexual Harassment Act compliance management"
       actions={
         <>
           <Button variant="outline" size="sm">
             <AlertTriangle className="mr-2 h-4 w-4" />
-            Risk Assessment
+            Report Incident
           </Button>
           <Button variant="outline" size="sm">
-            <FileText className="mr-2 h-4 w-4" />
-            Generate Report
+            <BookOpen className="mr-2 h-4 w-4" />
+            Training Materials
           </Button>
           <Button size="sm">
             <Plus className="mr-2 h-4 w-4" />
-            New Compliance Task
+            Schedule Training
           </Button>
         </>
       }
     >
-      <AuditComplianceDashboard />
+      <POSHComplianceModule />
     </StandardizedPageLayout>
   )
 }

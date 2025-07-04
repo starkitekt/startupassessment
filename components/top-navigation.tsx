@@ -53,6 +53,13 @@ import {
   HelpCircle,
   FileSearch,
   PieChart,
+  Activity,
+  Database,
+  AlertTriangle,
+  Lock,
+  Award,
+  UserCheck,
+  Calculator,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
@@ -121,13 +128,74 @@ const navigationSections = [
     ],
   },
   {
-    title: "Management",
+    title: "Audit",
     items: [
-      { name: "Compliance", href: "/audits", icon: Shield },
-      { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
-      { name: "Reports", href: "/reports", icon: TrendingUp },
-      { name: "Support", href: "/support", icon: HelpCircle },
-      { name: "Settings", href: "/settings", icon: Settings },
+      {
+        name: "Compliance Overview",
+        href: "/audit/compliance-overview",
+        icon: Shield,
+        description: "Real-time compliance health score and dashboard",
+      },
+      {
+        name: "Audit Trail",
+        href: "/audit/audit-trail",
+        icon: Activity,
+        description: "Detailed transaction logs and user activity monitoring",
+      },
+      {
+        name: "Corporate Compliance",
+        href: "/audit/corporate",
+        icon: Building2,
+        description: "ROC filings, board meetings, and director management",
+      },
+      {
+        name: "Taxation",
+        href: "/audit/taxation",
+        icon: Calculator,
+        description: "GST, Income Tax, TDS, and Professional Tax compliance",
+      },
+      {
+        name: "Labor Law",
+        href: "/audit/labor",
+        icon: Users,
+        description: "EPF/ESI, minimum wages, and employment contracts",
+      },
+      {
+        name: "Data Privacy",
+        href: "/audit/data-privacy",
+        icon: Lock,
+        description: "DPDPA compliance and data protection management",
+      },
+      {
+        name: "Intellectual Property",
+        href: "/audit/ip",
+        icon: Award,
+        description: "Patents, trademarks, and SIPP scheme benefits",
+      },
+      {
+        name: "POSH Compliance",
+        href: "/audit/posh",
+        icon: UserCheck,
+        description: "Prevention of Sexual Harassment Act compliance",
+      },
+      {
+        name: "Risk Management",
+        href: "/audit/risk-management",
+        icon: AlertTriangle,
+        description: "Predictive analytics and risk assessment tools",
+      },
+      {
+        name: "Document Management",
+        href: "/audit/documents",
+        icon: Database,
+        description: "Centralized repository and version control",
+      },
+      {
+        name: "Reporting & Analytics",
+        href: "/audit/reports",
+        icon: BarChart3,
+        description: "Customizable dashboards and automated reports",
+      },
     ],
   },
 ]
@@ -354,6 +422,10 @@ export function TopNavigation({ onMobileMenuToggle }: TopNavigationProps) {
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <BookOpen className="mr-2 h-4 w-4" />
+                Knowledge Base
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <HelpCircle className="mr-2 h-4 w-4" />

@@ -21,6 +21,13 @@ import {
   Target,
   Heart,
   Zap,
+  Activity,
+  Database,
+  AlertTriangle,
+  Lock,
+  Award,
+  UserCheck,
+  Calculator,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -53,11 +60,24 @@ const navigationSections = [
     ],
   },
   {
-    title: "Management",
+    title: "Audit & Compliance",
     items: [
-      { name: "Compliance", href: "/audits", icon: Shield },
-      { name: "Settings", href: "/settings", icon: Settings },
+      { name: "Compliance Overview", href: "/audit/compliance-overview", icon: Shield },
+      { name: "Audit Trail", href: "/audit/audit-trail", icon: Activity },
+      { name: "Corporate", href: "/audit/corporate", icon: Building2 },
+      { name: "Taxation", href: "/audit/taxation", icon: Calculator },
+      { name: "Labor Law", href: "/audit/labor", icon: Users },
+      { name: "Data Privacy", href: "/audit/data-privacy", icon: Lock },
+      { name: "IP Management", href: "/audit/ip", icon: Award },
+      { name: "POSH", href: "/audit/posh", icon: UserCheck },
+      { name: "Risk Management", href: "/audit/risk-management", icon: AlertTriangle },
+      { name: "Documents", href: "/audit/documents", icon: Database },
+      { name: "Reports", href: "/audit/reports", icon: BarChart3 },
     ],
+  },
+  {
+    title: "User",
+    items: [{ name: "Settings", href: "/settings", icon: Settings }],
   },
 ]
 
