@@ -1,45 +1,62 @@
-"use client"
-
+import { Suspense } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { PortfolioOverview } from "@/components/portfolio/portfolio-overview"
-import { PortfolioCompanies } from "@/components/portfolio/portfolio-companies"
-import { PortfolioInvestments } from "@/components/portfolio/portfolio-investments"
-import { PortfolioReports } from "@/components/portfolio/portfolio-reports"
+import { ProgramManagerDashboard } from "@/components/program-manager/program-manager-dashboard"
+import { StartupCoordination } from "@/components/program-manager/startup-coordination"
+import { MentorNetworkManagement } from "@/components/program-manager/mentor-network-management"
+import { Skeleton } from "@/components/ui/skeleton"
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-96" />
+      </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-32" />
+        ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Skeleton className="h-96" />
+        <Skeleton className="h-96" />
+      </div>
+    </div>
+  )
+}
 
 export default function PortfolioPage() {
   return (
-    <div className="space-y-8 lg:space-y-10 p-4 md:p-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight lg:text-4xl">Portfolio Management</h1>
-        <p className="text-muted-foreground">
-          Comprehensive portfolio management, tracking, and analytics for your startup investments.
-        </p>
-      </div>
+    <div className="container mx-auto p-6">
+      <Suspense fallback={<LoadingSkeleton />}>
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="startups">Startup Coordination</TabsTrigger>
+            <TabsTrigger value="mentors">Mentor Network</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="companies">Companies</TabsTrigger>
-          <TabsTrigger value="investments">Investments</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-        </TabsList>
+          <TabsContent value="dashboard">
+            <ProgramManagerDashboard />
+          </TabsContent>
 
-        <TabsContent value="overview">
-          <PortfolioOverview />
-        </TabsContent>
+          <TabsContent value="startups">
+            <StartupCoordination />
+          </TabsContent>
 
-        <TabsContent value="companies">
-          <PortfolioCompanies />
-        </TabsContent>
+          <TabsContent value="mentors">
+            <MentorNetworkManagement />
+          </TabsContent>
 
-        <TabsContent value="investments">
-          <PortfolioInvestments />
-        </TabsContent>
-
-        <TabsContent value="reports">
-          <PortfolioReports />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="analytics">
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium mb-2">Advanced Analytics</h3>
+              <p className="text-muted-foreground">Detailed program analytics and reporting coming soon</p>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </Suspense>
     </div>
   )
 }

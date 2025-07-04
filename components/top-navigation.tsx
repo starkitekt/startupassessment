@@ -51,6 +51,8 @@ import {
   BookOpen,
   TrendingUp,
   HelpCircle,
+  FileSearch,
+  PieChart,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
@@ -64,7 +66,7 @@ const navigationSections = [
     title: "Core",
     items: [
       { name: "Dashboard", href: "/", icon: Home },
-      { name: "Portfolio", href: "/portfolio", icon: Building2 },
+      { name: "Portfolio", href: "/portfolio", icon: Building2, description: "Program management for startups" },
       { name: "Analytics", href: "/analytics", icon: BarChart3 },
     ],
   },
@@ -85,6 +87,26 @@ const navigationSections = [
       { name: "Acceleration", href: "/accelerator", icon: Zap },
       { name: "Requests", href: "/requests", icon: MessageSquare },
       { name: "CSR Portal", href: "/csr", icon: Heart },
+    ],
+  },
+  {
+    title: "Investors",
+    items: [
+      { name: "Dashboard", href: "/investors", icon: PieChart, description: "Investment portfolio overview" },
+      { name: "Companies", href: "/investors/companies", icon: Building2, description: "Portfolio company management" },
+      {
+        name: "Analytics",
+        href: "/investors/analytics",
+        icon: TrendingUp,
+        description: "Advanced investment analytics",
+      },
+      {
+        name: "Due Diligence",
+        href: "/investors/due-diligence",
+        icon: FileSearch,
+        description: "Investment evaluation process",
+      },
+      { name: "Reports", href: "/investors/reports", icon: FileText, description: "Generate investment reports" },
     ],
   },
   {
@@ -183,7 +205,7 @@ export function TopNavigation({ onMobileMenuToggle }: TopNavigationProps) {
                                 <div className="text-sm font-medium leading-none">{item.name}</div>
                               </div>
                               <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
-                                Access {item.name.toLowerCase()} features and tools
+                                {item.description || `Access ${item.name.toLowerCase()} features and tools`}
                               </p>
                             </Link>
                           </NavigationMenuLink>
